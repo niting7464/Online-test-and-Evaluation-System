@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Welcome, {{ current_user.username }}</h3>
+
+
+<div class="row">
+  <div class="col-md-6">
+    <h5>Ongoing Tests</h5>
+    <ul class="list-group mb-4">
+      {% for test in tests %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ test.name }}
+          <a href="{% url 'test-attempt' test.id %}" class="btn btn-sm btn-primary">Start</a>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No ongoing tests.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="col-md-6">
+    <h5>Completed Tests</h5>
+    <ul class="list-group">
+      {% for attempt in completed_attempts %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ attempt.test.name }}
+          <span>Score: {{ attempt.score }}</span>
+          <a href="{% url 'test-result' attempt.id %}" class="btn btn-sm btn-success">View Result</a>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No completed tests.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

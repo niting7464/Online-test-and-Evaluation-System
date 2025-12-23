@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Test Attempt{% endblock %}
+
+{% block content %}
+<h4>{{ attempt.test.name }}</h4>
+<p class="text-muted">
+  Time Left: <strong>{{ attempt.time_left }}</strong>
+</p>
+
+{% for category in categories %}
+<h5 class="mt-4">{{ category.category_name }}</h5>
+
+{% for q in category.questions %}
+<div class="card mb-2 {% if q.attempted %}border-success{% endif %}">
+  <div class="card-body">
+    <p><strong>{{ q.question_text }}</strong></p>
+
+    <form method="post" action="{% url 'submit-answer' %}">
+      {% csrf_token %}
+      <input type="hidden" name="attempt" value="{{ attempt.id }}">
+      <input type="hidden" name="question" value="{{ q.id }}">
+
+      {% for key, opt in q.options.items %}
+      <div class="form-check">
+        <input class="form-check-input" type="radio"
+               name="selected_option" value="{{ key }}"
+               {% if q.selected_option == key %}checked{% endif %}>
+        <label class="form-check-label">{{ key }}. {{ opt }}</label>
+      </div>
+      {% endfor %}
+
+      <button class="btn btn-sm btn-primary mt-2">Save</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+{% endfor %}
+
+<form method="post" action="{% url 'submit-test' attempt.id %}" class="mt-4">
+  {% csrf_token %}
+  <button class="btn btn-danger">Submit Test</button>
+</form>
+{% endblock %}

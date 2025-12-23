@@ -1,7 +1,9 @@
 import requests
+import jwt
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
+from django.contrib.auth import logout
 
 API_BASE_URL = "http://127.0.0.1:8000/api/auth"
 
@@ -26,6 +28,7 @@ def register_view(request):
     return render(request, "auth/register.html")
 
 
+
 def login_view(request):
     if request.method == "POST":
         payload = {
@@ -34,24 +37,26 @@ def login_view(request):
         }
 
         response = requests.post(f"{API_BASE_URL}/login/", json=payload)
-        
-        print(request.session.get("access"))
-
 
         if response.status_code == 200:
             data = response.json()
-            request.session["access"] = data["access"]
-            request.session["refresh"] = data["refresh"]
-            return redirect("dashboard")  # future page
 
+            access = data["access"]
+            refresh = data["refresh"]
 
-        return render(
-            request,
-            "auth/login.html",
-            {"error": "Invalid credentials"}
-        )
+            # Save tokens and user info in session
+            request.session["access"] = access
+            request.session["refresh"] = refresh
+
+            # Redirect to next page or dashboard
+            return redirect(request.GET.get("next") or "dashboard")
+
+        # Invalid credentials
+        return render(request, "auth/login.html", {"error": "Invalid credentials"})
 
     return render(request, "auth/login.html")
+
+
 
 
 def forgot_password_view(request):
@@ -103,9 +108,11 @@ def reset_password_view(request, uid, token):
     return render(request, "auth/reset_password.html")
 
 
+def logout_view(request):
+    request.session.flush()
+    return redirect("login_page")
 
-def dashboard(request):
-    return HttpResponse("Login successful")
+
 
 
 

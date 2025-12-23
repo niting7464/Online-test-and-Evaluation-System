@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import (
 from .views import (
     UserSignupAPIView,
     CustomLoginAPIView,
+    CurrentUserAPIView,
     ForgotPasswordAPIView,
     ResetPasswordAPIView,
     LogoutAPIView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path("signup/", UserSignupAPIView.as_view(), name="api_signup"),
     path("login/", CustomLoginAPIView.as_view(), name="api_login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path('me/', CurrentUserAPIView.as_view(), name='current_user'),
     path("logout/", LogoutAPIView.as_view(), name="api_logout"),
     path('protected/', ProtectedAPIView.as_view()),
     path('forgot-password/', ForgotPasswordAPIView.as_view()),

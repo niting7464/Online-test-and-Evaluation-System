@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Test Result{% endblock %}
+
+{% block content %}
+<h4>{{ result.test.name }} – Result</h4>
+
+<div class="alert {% if result.passed %}alert-success{% else %}alert-danger{% endif %}">
+  Score: {{ result.score }}/{{ result.max_score }} |
+  {{ result.percentage }}% |
+  {% if result.passed %}PASSED{% else %}FAILED{% endif %}
+</div>
+
+<p><strong>Time Taken:</strong> {{ result.time_taken }}</p>
+
+{% for cat in result.categories %}
+<h5>{{ cat.category_name }} ({{ cat.category_score }})</h5>
+
+<ul class="list-group mb-3">
+  {% for q in cat.questions %}
+  <li class="list-group-item {% if q.is_correct %}list-group-item-success{% else %}list-group-item-danger{% endif %}">
+    <strong>{{ q.question_text }}</strong><br>
+    Selected: {{ q.selected_option }} |
+    Correct: {{ q.correct_option }}
+  </li>
+  {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}

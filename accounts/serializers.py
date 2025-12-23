@@ -33,6 +33,12 @@ class UserSignupSerializer(serializers.ModelSerializer):
         )
         return user
     
+    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'is_staff', 'is_admin']
+    
 
 class CustomTokenObtainSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
@@ -63,8 +69,6 @@ class CustomTokenObtainSerializer(serializers.Serializer):
         data["user"] = user
         return data
     
-
-from rest_framework import serializers
 
 
 class ChangePasswordSerializer(serializers.Serializer):

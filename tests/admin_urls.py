@@ -1,11 +1,21 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AdminTestViewSet, AdminTestCategoryConfigViewSet , AdminQuestionCategoryViewSet
+from .views import (
+                    AdminTestResultsCSVExportAPIView,
+                    AdminTestViewSet,
+                    AdminTestCategoryConfigViewSet ,
+                    AdminQuestionCategoryViewSet,
+                    AdminQuestionViewSet,
+                    AdminTestResultsAPIView,
+                    AdminTestResultsCSVExportAPIView        
+                    )
 
 
 router = DefaultRouter()
 router.register("tests", AdminTestViewSet, basename="admin-tests")
 router.register("categories", AdminQuestionCategoryViewSet, basename="admin-categories")
+router.register("questions", AdminQuestionViewSet, basename="admin-questions")
+
 
 
 urlpatterns = [
@@ -26,4 +36,15 @@ urlpatterns = [
             "patch": "partial_update",
         }),
     ),
+     path(
+        "results/",
+        AdminTestResultsAPIView.as_view(),
+        name="admin_results"
+    ),
+    path(
+        "results/export/",
+        AdminTestResultsCSVExportAPIView.as_view(),
+        name="admin_results_export"
+    ),
+  
 ]

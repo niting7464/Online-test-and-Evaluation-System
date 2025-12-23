@@ -20,6 +20,8 @@ from .serializers import (
     UserSignupSerializer,
     CustomTokenObtainSerializer,
     ChangePasswordSerializer,
+    UserSerializer
+    
 )
 
 
@@ -57,6 +59,17 @@ class CustomLoginAPIView(APIView):
             },
             status=status.HTTP_200_OK
         )
+        
+
+class CurrentUserAPIView(APIView):
+    """
+    API endpoint to get the currently authenticated user.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ProtectedAPIView(APIView):
@@ -106,7 +119,7 @@ class ForgotPasswordAPIView(APIView):
         token = PasswordResetTokenGenerator().make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        reset_link = f"http://127.0.0.1:8000/accounts/reset-password/{uid}/{token}/"
+        reset_link = f"http://127.0.0.1:8000/reset-password/{uid}/{token}/"
 
         html_content = render_to_string(
             "emails/password_reset.html",

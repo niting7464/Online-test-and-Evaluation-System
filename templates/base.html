@@ -13,9 +13,17 @@
 <body class="bg-light">
 
 <nav class="navbar navbar-dark bg-dark">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1">Online Test System</span>
-    </div>
+  <div class="container d-flex justify-content-between">
+    <span class="navbar-brand">Online Test System</span>
+
+    {% if current_user %}
+  <div>
+    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light">
+      Logout
+    </a>
+  </div>
+ {% endif %}
+  </div>
 </nav>
 
 <div class="container mt-5">

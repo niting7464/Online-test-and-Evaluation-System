@@ -21,4 +21,17 @@ class IsSystemAdmin(BasePermission):
             and request.user.is_authenticated
             and getattr(request.user, "is_admin", False)
         )
+        
+
+class IsNormalUser(BasePermission):
+    """
+    Allows access only to authenticated non-admin users.
+    """
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and not getattr(request.user, "is_admin", False)
+        )
+
 
