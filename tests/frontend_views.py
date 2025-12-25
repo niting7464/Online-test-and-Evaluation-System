@@ -108,11 +108,18 @@ def test_attempt_view(request, attempt_id, index=None):
     import json
     categories_data = serializer.data["categories"]
 
+    # compute actual total questions present in this attempt (sum of category question counts)
+    try:
+        total_questions = sum(len(cat.get("questions", [])) for cat in categories_data)
+    except Exception:
+        total_questions = attempt.test.max_questions
+
     return render(request, "test/attempt.html", {
         "attempt": attempt,
         "categories": categories_data,
         "categories_json": json.dumps(categories_data),
         "remaining_seconds": remaining,
+        "total_questions": total_questions,
     })
 
 

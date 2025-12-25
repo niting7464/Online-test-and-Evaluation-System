@@ -90,7 +90,14 @@ def forgot_password_view(request):
             if user:
                 token = PasswordResetTokenGenerator().make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
-                reset_link = f"http://127.0.0.1:8000/reset-password/{uid}/{token}/"
+                from django.urls import reverse
+                reset_path = reverse('reset-password_page', args=[uid, token])
+                # Use configured domain when available (useful for emails sent to phones)
+                domain = getattr(__import__('django.conf').conf.settings, 'PASSWORD_RESET_DOMAIN', None)
+                if domain:
+                    reset_link = domain.rstrip('/') + reset_path
+                else:
+                    reset_link = request.build_absolute_uri(reset_path)
                 html_content = render_to_string(
                     "emails/password_reset.html",
                     {"user": user, "reset_link": reset_link}
@@ -138,6 +145,84 @@ def reset_password_view(request, uid, token):
             return render(request, "auth/reset_password.html", {"form": form})
 
     return render(request, "auth/reset_password.html")
+
+
+@ensure_csrf_cookie
+def change_password_view(request):
+    """
+    Frontend handler for changing password from dashboard.
+    Uses session-based auth (expects user_id in session) and Django user check_password.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect("login_page")
+
+    User = get_user_model()
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return redirect("login_page")
+
+    if request.method == "POST":
+        old = request.POST.get('old_password')
+        new = request.POST.get('new_password')
+        confirm = request.POST.get('confirm_password')
+
+        if not old or not new or not confirm:
+            messages.error(request, "All fields are required")
+            return redirect(reverse('dashboard'))
+
+        if new != confirm:
+            messages.error(request, "New passwords do not match")
+            return redirect(reverse('dashboard'))
+
+        if not user.check_password(old):
+            messages.error(request, "Old password is incorrect")
+            return redirect(reverse('dashboard'))
+
+        user.set_password(new)
+        user.save()
+        messages.success(request, "Password changed successfully")
+        return redirect(reverse('dashboard'))
+    # For GET, render change password page
+    return render(request, 'auth/change_password.html')
+
+
+@ensure_csrf_cookie
+def edit_email_view(request):
+    """Frontend handler to change user's email from dashboard/profile dropdown."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect("login_page")
+
+    User = get_user_model()
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return redirect("login_page")
+
+    if request.method == "POST":
+        old_email = request.POST.get('old_email')
+        new_email = request.POST.get('new_email')
+        if not old_email or not new_email:
+            messages.error(request, "Both current and new email are required")
+            return redirect(reverse('dashboard'))
+
+        # verify old email matches current
+        if old_email.strip().lower() != (user.email or '').strip().lower():
+            messages.error(request, "Current email does not match")
+            return redirect(reverse('dashboard'))
+
+        # check uniqueness
+        existing = User.objects.filter(email__iexact=new_email.strip()).exclude(id=user.id).first()
+        if existing:
+            messages.error(request, "Email already in use")
+            return redirect(reverse('dashboard'))
+
+        user.email = new_email.strip()
+        user.save()
+        messages.success(request, "Email updated successfully")
+        return redirect(reverse('dashboard'))
+    # For GET, render edit email page
+    return render(request, 'auth/edit_email.html', { 'current_email': user.email })
 
 
 def logout_view(request):

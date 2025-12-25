@@ -174,7 +174,7 @@
         <div class="section-body">
           {% if completed_attempts %}
             <div class="results-list-modern">
-              {% for attempt in completed_attempts|slice:":5" %}
+              {% for attempt in completed_attempts|slice:":3" %}
               <div class="result-modern-item {% if attempt.id|stringformat:"s" == highlight_attempt %}result-highlighted{% endif %}">
                 <div class="result-modern-header">
                   <div class="result-modern-title-wrapper">
@@ -216,7 +216,7 @@
               </div>
               {% endfor %}
             </div>
-            {% if completed_attempts|length > 5 %}
+            {% if completed_attempts|length > 3 %}
             <div class="text-center mt-3">
               <a href="{% url 'attempted-tests' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-right me-1"></i>View All
@@ -232,18 +232,14 @@
               <p>Complete a test to see your results here</p>
             </div>
           {% endif %}
-          {% if completed_attempts|length > 0 and completed_attempts|length <= 5 %}
-          <div class="text-center mt-3">
-            <a href="{% url 'attempted-tests' %}" class="btn btn-outline-secondary btn-sm">
-              <i class="bi bi-list-ul me-1"></i>View All Attempts
-            </a>
-          </div>
-          {% endif %}
+          
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
 
 <style>
 .dashboard-wrapper {

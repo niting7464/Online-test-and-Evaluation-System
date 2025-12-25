@@ -620,6 +620,120 @@ body {
     background: var(--gray-200);
 }
 
+/* Ensure dropdowns appear above other elements and are clickable */
+.navbar, .navbar .dropdown {
+    position: relative;
+    z-index: 1100;
+}
+.dropdown-menu {
+    z-index: 2050 !important;
+    pointer-events: auto !important;
+}
+.dropdown-item {
+    pointer-events: auto !important;
+}
+
+/* Profile card sizing inside dropdown */
+.profile-card {
+    min-width: 320px;
+    max-width: 420px;
+}
+.profile-card .profile-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.05rem;
+}
+
+/* Profile avatar in dropdown header */
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    box-shadow: 0 6px 18px rgba(11,22,40,0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+/* Smaller avatar when used in navbar toggle button */
+.navbar .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+}
+
+/* Compact icon button style for navbar */
+.btn-icon {
+    padding: 6px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+/* Nudge the profile dropdown slightly left to align visually */
+.navbar .dropdown {
+    margin-left: -6px;
+}
+
+.dropdown-menu .fw-semibold {
+    font-weight: 600;
+}
+
+.dropdown-menu {
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 6px 20px rgba(11,22,40,0.12);
+    border: 1px solid rgba(16,24,40,0.06);
+}
+
+/* dropdown item polish */
+.dropdown-item {
+    padding: 10px 14px;
+    transition: background .12s ease, color .12s ease;
+    color: #0f1724;
+}
+.dropdown-item i.text-muted { color: #6b7280; }
+.dropdown-item:hover { background: #f8fafc; color: #0b1220; }
+.dropdown-divider { margin: 6px 0; }
+.list-group-flush .dropdown-item { border-radius: 0; }
+
+/* Slight animation when dropdown appears */
+.dropdown-menu.show { transform-origin: top right; animation: dropdownFade .12s ease; }
+@keyframes dropdownFade { from { opacity: 0; transform: translateY(-6px) scale(.995);} to { opacity:1; transform: translateY(0) scale(1);} }
+
+/* Smaller profile button so icon is compact and aligned */
+/* (restored default button sizing; custom compact rule removed) */
+
+/* Keep dropdown within viewport and responsive */
+.dropdown-menu.dropdown-menu-end {
+        right: 8px !important;
+        left: auto !important;
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+}
+
+/* On very small screens, make dropdown full width under navbar */
+@media (max-width: 480px) {
+    .navbar .dropdown-menu.dropdown-menu-end {
+        position: absolute;
+        left: 8px !important;
+        right: 8px !important;
+        width: auto !important;
+        max-width: calc(100vw - 16px);
+    }
+    .dropdown-menu .px-3 {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}
+
 .auth-divider span {
     background: white;
     padding: 0 1rem;
@@ -640,6 +754,21 @@ body {
     border: 1px solid transparent;
 }
 
+
+/* Brand styling: make Mindsprint more distinctive but professional */
+.navbar-brand {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--primary-dark) !important;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.navbar-brand:hover { text-decoration: none; color: var(--primary) !important; }
+
+@media (max-width: 576px) {
+    .navbar-brand { font-size: 1.25rem; }
+}
 .badge-success {
     background: var(--success-light);
     color: var(--success);

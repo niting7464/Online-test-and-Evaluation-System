@@ -120,7 +120,14 @@ class ForgotPasswordAPIView(APIView):
         token = PasswordResetTokenGenerator().make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        reset_link = f"http://127.0.0.1:8000/reset-password/{uid}/{token}/"
+        from django.urls import reverse
+        reset_path = reverse('reset-password_page', args=[uid, token])
+        # Respect configured domain when present (useful for emails to phones)
+        domain = getattr(__import__('django.conf').conf.settings, 'PASSWORD_RESET_DOMAIN', None)
+        if domain:
+            reset_link = domain.rstrip('/') + reset_path
+        else:
+            reset_link = request.build_absolute_uri(reset_path)
 
         html_content = render_to_string(
             "emails/password_reset.html",

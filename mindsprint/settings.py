@@ -23,6 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
+# Optional domain to use when building password-reset links in emails.
+# Example (set in .env): PASSWORD_RESET_DOMAIN=https://example.com
+# If not set, views will fall back to using request.build_absolute_uri().
+PASSWORD_RESET_DOMAIN = os.getenv('PASSWORD_RESET_DOMAIN')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
