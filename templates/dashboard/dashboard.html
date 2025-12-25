@@ -1,53 +1,718 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-{% if current_user and current_user.is_authenticated %}
-<h3 class="mb-4">Welcome, {{ current_user.username }}</h3>
-{% else %}
-<h3 class="mb-4">Welcome</h3>
-{% endif %}
-
-
-<div class="row">
-  <div class="col-md-6">
-    <h5>Ongoing Tests</h5>
-    <ul class="list-group mb-4">
-      {% for test in tests %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ test.name }}
-          <a href="{% url 'start-attempt' test.id %}" class="btn btn-sm btn-primary">Start</a>
-        </li>
-      {% empty %}
-        <li class="list-group-item">No ongoing tests.</li>
-      {% endfor %}
-    </ul>
+<div class="dashboard-wrapper">
+  <!-- Welcome Header -->
+  <div class="dashboard-hero mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        {% if current_user and current_user.is_authenticated %}
+        <h1 class="dashboard-hero-title">
+          <i class="bi bi-person-circle me-2"></i>Welcome, {{ current_user.username }}
+        </h1>
+        <p class="dashboard-hero-subtitle">Track your progress and take on new challenges</p>
+        {% else %}
+        <h1 class="dashboard-hero-title">Welcome</h1>
+        {% endif %}
+      </div>
+      <div class="col-md-4 text-md-end">
+        <div class="dashboard-date-card">
+          <div class="date-label">Today</div>
+          <div class="date-value">{% now "l, F j" %}</div>
+          <div class="date-year">{% now "Y" %}</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="col-md-6">
-    <h5>Completed Tests</h5>
-    <ul class="list-group">
-      {% for attempt in completed_attempts %}
-        <li class="list-group-item d-flex justify-content-between align-items-center {% if attempt.id|stringformat:"s" == highlight_attempt %}border-primary bg-light{% endif %}">
-          <div>
-            <strong>{{ attempt.test.name }}</strong>
-            {% if attempt.id|stringformat:"s" == highlight_attempt %}
-              <div class="text-primary small">Latest attempt</div>
+  <!-- Statistics Overview -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="stat-card-modern stat-primary">
+        <div class="stat-icon-modern">
+          <i class="bi bi-journal-text"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-number">{{ tests|length }}</div>
+          <div class="stat-text">Available Tests</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card-modern stat-success">
+        <div class="stat-icon-modern">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-number">{{ attempt_count }}</div>
+          <div class="stat-text">Completed</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card-modern stat-info">
+        <div class="stat-icon-modern">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-number">{{ completed_attempts|length }}</div>
+          <div class="stat-text">Total Attempts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ongoing Tests Alert -->
+  {% if ongoing_attempts %}
+  <div class="alert-card alert-warning mb-4">
+    <div class="alert-card-header">
+      <div class="d-flex align-items-center">
+        <div class="alert-indicator me-3"></div>
+        <div>
+          <h5 class="mb-1"><i class="bi bi-exclamation-triangle me-2"></i>You have ongoing tests</h5>
+          <p class="mb-0 small">Continue where you left off</p>
+        </div>
+      </div>
+    </div>
+    <div class="alert-card-body">
+      <div class="row g-3">
+        {% for attempt in ongoing_attempts %}
+        <div class="col-md-6">
+          <div class="ongoing-item">
+            <div class="ongoing-item-header">
+              <h6 class="mb-1">
+                <i class="bi bi-play-circle-fill me-2 text-warning"></i>{{ attempt.test.name }}
+              </h6>
+              <a href="{% url 'test-attempt' attempt.id %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-arrow-right me-1"></i>Continue
+              </a>
+            </div>
+            <div class="ongoing-item-meta">
+              <span class="text-muted small">
+                <i class="bi bi-clock me-1"></i>
+                Started: {% timezone "Asia/Kolkata" %}{{ attempt.started_at|date:"M d, g:i A" }}{% endtimezone %}
+              </span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Main Content Grid -->
+  <div class="row g-4">
+    <!-- Available Tests -->
+    <div class="col-lg-7">
+      <div class="section-card">
+        <div class="section-header">
+          <h4 class="section-title">
+            <i class="bi bi-play-circle-fill me-2"></i>Available Tests
+          </h4>
+        </div>
+        <div class="section-body">
+          {% if tests %}
+            <div class="tests-grid">
+              {% for test in tests %}
+              <div class="test-modern-card">
+                <div class="test-modern-header">
+                  <div class="test-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                  </div>
+                  <h5 class="test-modern-title">{{ test.name }}</h5>
+                </div>
+                {% if test.description %}
+                <p class="test-modern-desc">{{ test.description|truncatewords:20 }}</p>
+                {% endif %}
+                <div class="test-modern-stats">
+                  <div class="test-stat">
+                    <i class="bi bi-clock text-primary"></i>
+                    <span>{{ test.duration }} min</span>
+                  </div>
+                  <div class="test-stat">
+                    <i class="bi bi-question-circle text-info"></i>
+                    <span>{{ test.max_questions }} Q</span>
+                  </div>
+                  <div class="test-stat">
+                    <i class="bi bi-trophy text-warning"></i>
+                    <span>{{ test.total_marks }} pts</span>
+                  </div>
+                </div>
+                <div class="test-modern-action">
+                  <a href="{% url 'start-attempt' test.id %}" class="btn btn-primary w-100">
+                    <i class="bi bi-play-fill me-2"></i>Start Test
+                  </a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-modern">
+              <div class="empty-icon-modern">
+                <i class="bi bi-inbox"></i>
+              </div>
+              <h5>No Tests Available</h5>
+              <p>Check back later for new tests</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Results -->
+    <div class="col-lg-5">
+      <div class="section-card">
+        <div class="section-header">
+          <h4 class="section-title">
+            <i class="bi bi-trophy-fill me-2"></i>Recent Results
+          </h4>
+        </div>
+        <div class="section-body">
+          {% if completed_attempts %}
+            <div class="results-list-modern">
+              {% for attempt in completed_attempts|slice:":5" %}
+              <div class="result-modern-item {% if attempt.id|stringformat:"s" == highlight_attempt %}result-highlighted{% endif %}">
+                <div class="result-modern-header">
+                  <div class="result-modern-title-wrapper">
+                    <h6 class="result-modern-title">
+                      <i class="bi bi-file-check me-2"></i>{{ attempt.test.name }}
+                    </h6>
+                    {% if attempt.id|stringformat:"s" == highlight_attempt %}
+                    <span class="badge-new">NEW</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="result-modern-meta">
+                  <i class="bi bi-calendar3 me-1"></i>
+                  {% timezone "Asia/Kolkata" %}
+                  {{ attempt.completed_at|date:"M d, Y" }} • {{ attempt.completed_at|date:"g:i A" }}
+                  {% endtimezone %}
+                </div>
+                <div class="result-modern-score">
+                  <div class="score-display {% if attempt.score >= attempt.test.passing_marks %}score-pass{% else %}score-fail{% endif %}">
+                    <span class="score-main">{{ attempt.score }}</span>
+                    <span class="score-separator">/</span>
+                    <span class="score-max">{{ attempt.test.total_marks }}</span>
+                  </div>
+                  <div class="result-modern-status">
+                    {% if attempt.score >= attempt.test.passing_marks %}
+                    <span class="status-tag status-passed">
+                      <i class="bi bi-check-circle-fill me-1"></i>PASSED
+                    </span>
+                    {% else %}
+                    <span class="status-tag status-failed">
+                      <i class="bi bi-x-circle-fill me-1"></i>FAILED
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+                <a href="/result/{{ attempt.id }}/" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                  <i class="bi bi-eye me-1"></i>View Details
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+            {% if completed_attempts|length > 5 %}
+            <div class="text-center mt-3">
+              <a href="{% url 'attempted-tests' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-right me-1"></i>View All
+              </a>
+            </div>
             {% endif %}
+          {% else %}
+            <div class="empty-modern">
+              <div class="empty-icon-modern">
+                <i class="bi bi-inbox"></i>
+              </div>
+              <h5>No Results Yet</h5>
+              <p>Complete a test to see your results here</p>
+            </div>
+          {% endif %}
+          {% if completed_attempts|length > 0 and completed_attempts|length <= 5 %}
+          <div class="text-center mt-3">
+            <a href="{% url 'attempted-tests' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-list-ul me-1"></i>View All Attempts
+            </a>
           </div>
-          <div class="text-end">
-            <div>Score: {{ attempt.score }}</div>
-            <a href="/result/{{ attempt.id }}/" class="btn btn-sm btn-success mt-1">View Result</a>
-          </div>
-        </li>
-      {% empty %}
-        <li class="list-group-item">No completed tests.</li>
-      {% endfor %}
-    </ul>
-    <div class="mt-3">
-      <a href="{% url 'attempted-tests' %}" class="btn btn-sm btn-outline-secondary">View all attempts</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+.dashboard-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Hero Section */
+.dashboard-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.dashboard-hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+.dashboard-hero-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0 0 0;
+  font-size: 1rem;
+}
+
+.dashboard-date-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.date-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.date-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.25rem 0;
+}
+
+.date-year {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* Modern Stat Cards */
+.stat-card-modern {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all var(--transition-base);
+  height: 100%;
+}
+
+.stat-card-modern:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-icon-modern {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.stat-primary .stat-icon-modern {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.2) 100%);
+  color: var(--primary);
+}
+
+.stat-success .stat-icon-modern {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: var(--success);
+}
+
+.stat-info .stat-icon-modern {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.1) 0%, rgba(2, 132, 199, 0.2) 100%);
+  color: var(--info);
+}
+
+.stat-info {
+  flex-grow: 1;
+}
+
+.stat-number {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.stat-text {
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Alert Card */
+.alert-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+}
+
+.alert-warning {
+  border-left: 4px solid var(--warning);
+}
+
+.alert-card-header {
+  background: var(--warning-light);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.alert-indicator {
+  width: 12px;
+  height: 12px;
+  background: var(--warning);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.alert-card-body {
+  padding: 1.5rem;
+}
+
+.ongoing-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.ongoing-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.ongoing-item-header h6 {
+  margin: 0;
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.ongoing-item-meta {
+  font-size: var(--font-size-sm);
+}
+
+/* Section Cards */
+.section-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.section-body {
+  padding: 1.5rem;
+  flex-grow: 1;
+}
+
+/* Modern Test Cards */
+.tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.test-modern-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.test-modern-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  background: white;
+}
+
+.test-modern-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.test-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+  color: white;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.test-modern-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  flex-grow: 1;
+}
+
+.test-modern-desc {
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.test-modern-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.test-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+  font-weight: 500;
+}
+
+.test-modern-action {
+  margin-top: auto;
+}
+
+/* Modern Results */
+.results-list-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-modern-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: all var(--transition-base);
+}
+
+.result-modern-item:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--gray-300);
+  background: white;
+}
+
+.result-modern-item.result-highlighted {
+  border-color: var(--primary);
+  border-width: 2px;
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.result-modern-header {
+  margin-bottom: 0.75rem;
+}
+
+.result-modern-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.result-modern-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  flex-grow: 1;
+}
+
+.badge-new {
+  background: var(--primary);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.result-modern-meta {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  margin-bottom: 0.75rem;
+}
+
+.result-modern-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.score-display {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+}
+
+.score-pass {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.score-fail {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.score-main {
+  font-size: 1.5rem;
+}
+
+.score-separator {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.score-max {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.result-modern-status {
+  flex-shrink: 0;
+}
+
+.status-tag {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-passed {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.status-failed {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+/* Empty State */
+.empty-modern {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-icon-modern {
+  width: 80px;
+  height: 80px;
+  background: var(--gray-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 2.5rem;
+  color: var(--gray-400);
+}
+
+.empty-modern h5 {
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.empty-modern p {
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-hero {
+    padding: 1.5rem;
+  }
+  
+  .dashboard-hero-title {
+    font-size: 1.5rem;
+  }
+  
+  .tests-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card-modern {
+    padding: 1.25rem;
+  }
+  
+  .stat-icon-modern {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .stat-number {
+    font-size: 1.75rem;
+  }
+}
+</style>
 {% endblock %}

@@ -1,26 +1,98 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}Attempted Tests{% endblock %}
 
 {% block content %}
-<h3 class="mb-4">Your Attempts</h3>
+<div class="fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="text-gradient mb-2">
+        <i class="bi bi-clock-history me-2"></i>Your Test Attempts
+      </h2>
+      <p class="text-muted">View all your test attempts and results</p>
+    </div>
+    <a href="/dashboard/" class="btn btn-outline-primary">
+      <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+  </div>
 
-<div class="list-group">
-  {% for a in attempts %}
-    <div class="list-group-item d-flex justify-content-between align-items-start">
-      <div>
-        <div class="fw-bold">{{ a.test.name }}</div>
-        <div class="small text-muted">Started: {{ a.started_at }} • Status: {{ a.status }}</div>
-        <div class="small mt-1">Score: {{ a.score }} / {{ a.test.total_marks }}</div>
-      </div>
-      <div class="btn-group-vertical">
-        <a href="/result/{{ a.id }}/" class="btn btn-sm btn-outline-primary mb-1">View Result</a>
-        <a href="/api/attempts/{{ a.id }}/export/" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+  {% if attempts %}
+  <div class="row g-3">
+    {% for a in attempts %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div class="flex-grow-1">
+              <h5 class="mb-2">
+                <i class="bi bi-file-earmark-text me-2 text-primary"></i>{{ a.test.name }}
+              </h5>
+              <div class="d-flex flex-wrap gap-3 mb-2">
+                <span class="text-muted small">
+                  <i class="bi bi-calendar3 me-1"></i>
+                  Started: {% timezone "Asia/Kolkata" %}{{ a.started_at|date:"M d, Y" }} at {{ a.started_at|date:"g:i A" }}{% endtimezone %}
+                </span>
+                {% if a.completed_at %}
+                <span class="text-muted small">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Completed: {% timezone "Asia/Kolkata" %}{{ a.completed_at|date:"M d, Y" }} at {{ a.completed_at|date:"g:i A" }}{% endtimezone %}
+                </span>
+                {% endif %}
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge {% if a.status == 'COMPLETED' %}badge-success{% else %}badge-warning{% endif %}">
+                  <i class="bi bi-{% if a.status == 'COMPLETED' %}check-circle{% else %}clock{% endif %} me-1"></i>
+                  {{ a.status }}
+                </span>
+                <span class="badge badge-info">
+                  <i class="bi bi-star-fill me-1"></i>
+                  Score: {{ a.score }} / {{ a.test.total_marks }}
+                </span>
+                {% if a.status == 'COMPLETED' %}
+                  {% if a.score >= a.test.passing_marks %}
+                  <span class="badge badge-success">
+                    <i class="bi bi-trophy me-1"></i>PASSED
+                  </span>
+                  {% else %}
+                  <span class="badge badge-danger">
+                    <i class="bi bi-x-circle me-1"></i>FAILED
+                  </span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+            <div class="ms-3 d-flex flex-column gap-2">
+              {% if a.status == 'COMPLETED' %}
+              <a href="/result/{{ a.id }}/" class="btn btn-primary">
+                <i class="bi bi-eye me-1"></i>View Result
+              </a>
+              <a href="/api/attempts/{{ a.id }}/export/" class="btn btn-outline-secondary" target="_blank">
+                <i class="bi bi-download me-1"></i>Export CSV
+              </a>
+              {% else %}
+              <a href="/attempt/{{ a.id }}/" class="btn btn-primary">
+                <i class="bi bi-play-fill me-1"></i>Continue Test
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  {% empty %}
-    <div class="list-group-item">You have not attempted any tests yet.</div>
-  {% endfor %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-inbox" style="font-size: 4rem; color: var(--gray-400);"></i>
+      <h5 class="mt-3 text-muted">No Attempts Yet</h5>
+      <p class="text-muted">You haven't attempted any tests yet. Start a test from the dashboard!</p>
+      <a href="/dashboard/" class="btn btn-primary mt-3">
+        <i class="bi bi-arrow-left me-1"></i>Go to Dashboard
+      </a>
+    </div>
+  </div>
+  {% endif %}
 </div>
-
 {% endblock %}

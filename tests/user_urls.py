@@ -16,5 +16,5 @@ urlpatterns = [
     path("attempts/submit-answer/", SubmitAnswerAPIView.as_view(), name="submit-answer"),
     path("attempts/<int:attempt_id>/submit/", SubmitTestAPIView.as_view(), name="submit-test"),
     path("attempts/<int:attempt_id>/export/", ExportAttemptCSVAPIView.as_view(), name="export-attempt"),
-    path("attempts/<int:attempt_id>/result/", TestResultAPIView.as_view(), name="test-result"),
+    path("attempts/<int:attempt_id>/result/", TestResultAPIView.as_view(), name="api-test-result"),
 ]

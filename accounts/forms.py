@@ -3,10 +3,10 @@ from django.contrib.auth import get_user_model, authenticate
 
 
 class RegisterForm(forms.Form):
-    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class':'form-control'}))
-    email = forms.EmailField(widget=forms.EmailInput(attrs={'class':'form-control'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}), min_length=8)
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
+    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Choose a username'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder':'Enter your email'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Create a password'}), min_length=8)
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Confirm your password'}))
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -33,8 +33,8 @@ class RegisterForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    username_or_email = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
+    username_or_email = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Enter your username or email'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Enter your password'}))
 
     def clean(self):
         cleaned = super().clean()
@@ -57,12 +57,12 @@ class LoginForm(forms.Form):
 
 
 class ForgotPasswordForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={'class':'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder':'Enter your email address'}))
 
 
 class ResetPasswordForm(forms.Form):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}), min_length=8)
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Enter new password'}), min_length=8)
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Confirm new password'}))
 
     def clean(self):
         cleaned = super().clean()

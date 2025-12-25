@@ -2,50 +2,193 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-body">
-                <h4 class="text-center mb-4">Create Account</h4>
-
-                {% if form %}
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
-                </form>
-                {% else %}
-                {% if error %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                {% endif %}
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label>Username</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Confirm Password</label>
-                        <input type="password" name="confirm_password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
-                </form>
-                {% endif %}
-
-                <p class="text-center mt-3">
-                    Already have an account?
-                    <a href="{% url 'login_page' %}">Login</a>
-                </p>
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="auth-header">
+            <div class="mb-3">
+                <i class="bi bi-person-plus" style="font-size: 3rem; color: var(--primary);"></i>
             </div>
+            <h4>Create Account</h4>
+            <p>Join us and start your learning journey</p>
         </div>
+
+        {% if form %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-person me-1"></i>Username
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-envelope me-1"></i>Email
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-lock me-1"></i>Password
+                </label>
+                <div class="password-input-wrapper position-relative">
+                    {{ form.password }}
+                    <button type="button" class="btn btn-link password-toggle position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 0; border: none; background: none; color: var(--gray-600);">
+                        <i class="bi bi-eye" id="password-toggle-icon"></i>
+                    </button>
+                </div>
+                {% if form.password.errors %}
+                    <div class="text-danger small mt-1">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-lock-fill me-1"></i>Confirm Password
+                </label>
+                <div class="password-input-wrapper position-relative">
+                    {{ form.confirm_password }}
+                    <button type="button" class="btn btn-link password-toggle-confirm position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 0; border: none; background: none; color: var(--gray-600);">
+                        <i class="bi bi-eye" id="password-confirm-toggle-icon"></i>
+                    </button>
+                </div>
+                {% if form.confirm_password.errors %}
+                    <div class="text-danger small mt-1">{{ form.confirm_password.errors }}</div>
+                {% endif %}
+            </div>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
+        </form>
+        {% else %}
+        {% if error %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+            </div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-person me-1"></i>Username
+                </label>
+                <input type="text" name="username" class="form-control" required placeholder="Choose a username">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-envelope me-1"></i>Email
+                </label>
+                <input type="email" name="email" class="form-control" required placeholder="Enter your email">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-lock me-1"></i>Password
+                </label>
+                <div class="password-input-wrapper position-relative">
+                    <input type="password" name="password" id="password-input" class="form-control" required placeholder="Create a password">
+                    <button type="button" class="btn btn-link password-toggle position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 0; border: none; background: none; color: var(--gray-600);">
+                        <i class="bi bi-eye" id="password-toggle-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-lock-fill me-1"></i>Confirm Password
+                </label>
+                <div class="password-input-wrapper position-relative">
+                    <input type="password" name="confirm_password" id="confirm-password-input" class="form-control" required placeholder="Confirm your password">
+                    <button type="button" class="btn btn-link password-toggle-confirm position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 0; border: none; background: none; color: var(--gray-600);">
+                        <i class="bi bi-eye" id="password-confirm-toggle-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
+        </form>
+        {% endif %}
+
+        <div class="auth-divider">
+            <span>or</span>
+        </div>
+
+        <p class="text-center mt-3 mb-0">
+            Already have an account?
+            <a href="{% url 'login_page' %}" class="text-primary fw-medium text-decoration-none">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+            </a>
+        </p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle
+    const passwordInput = document.getElementById('password-input') || document.querySelector('input[name="password"][type="password"]');
+    const toggleButton = document.querySelector('.password-toggle');
+    const toggleIcon = document.getElementById('password-toggle-icon') || document.querySelector('.password-toggle i');
+    
+    if (toggleButton && passwordInput) {
+        toggleButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (toggleIcon) {
+                toggleIcon.classList.toggle('bi-eye');
+                toggleIcon.classList.toggle('bi-eye-slash');
+            }
+        });
+    }
+    
+    // Confirm password toggle
+    const confirmPasswordInput = document.getElementById('confirm-password-input') || document.querySelector('input[name="confirm_password"][type="password"]');
+    const confirmToggleButton = document.querySelector('.password-toggle-confirm');
+    const confirmToggleIcon = document.getElementById('password-confirm-toggle-icon') || document.querySelector('.password-toggle-confirm i');
+    
+    if (confirmToggleButton && confirmPasswordInput) {
+        confirmToggleButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordInput.setAttribute('type', type);
+            
+            if (confirmToggleIcon) {
+                confirmToggleIcon.classList.toggle('bi-eye');
+                confirmToggleIcon.classList.toggle('bi-eye-slash');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 40px;
+}
+
+.password-toggle,
+.password-toggle-confirm {
+    z-index: 10;
+    cursor: pointer;
+}
+
+.password-toggle:hover,
+.password-toggle-confirm:hover {
+    color: var(--primary) !important;
+}
+</style>
 {% endblock %}

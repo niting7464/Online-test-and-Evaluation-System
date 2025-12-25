@@ -3,210 +3,528 @@
 {% block title %}Test Attempt{% endblock %}
 
 {% block content %}
-<h4>{{ attempt.test.name }}</h4>
-<p class="text-muted">
-  Time Left: <strong id="time-left"></strong>
-</p>
-
-<div id="attempt-meta" data-attempt-id="{{ attempt.id }}" data-remaining-seconds="{{ remaining_seconds }}"></div>
-
-<!-- Category list (shown first) -->
-<div id="category-list" class="row g-3 mb-3">
-  {% for category in categories %}
-  <div class="col-12 col-md-4">
-    <div class="card h-100 category-tile" data-index="{{ forloop.counter0 }}" style="cursor:pointer;">
-      <div class="card-body d-flex flex-column">
-        <h5 class="card-title">{{ category.category_name }}</h5>
-        <p class="card-text text-muted small mb-2">Questions: {{ category.questions|length }}</p>
-        <div class="mt-auto">
-          <a href="{% url 'test-attempt-category' attempt.id forloop.counter0 %}" class="btn btn-sm btn-outline-primary select-category">Start</a>
+<div class="test-attempt-container">
+  <!-- Test Header with Timer -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h4 class="mb-1">{{ attempt.test.name }}</h4>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-question-circle me-1"></i>{{ attempt.test.max_questions }} Questions | 
+            <i class="bi bi-trophy me-1"></i>{{ attempt.test.total_marks }} Marks
+          </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="timer-display-inline">
+            <i class="bi bi-clock me-2"></i>
+            <strong id="time-left">Loading...</strong>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  {% endfor %}
-</div>
 
-<!-- Questions area (hidden until category picked) -->
-<div id="categories-wrap" style="display:none;">
-{% for category in categories %}
-  <div class="attempt-category" data-index="{{ forloop.counter0 }}" style="display: none;">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mt-4">{{ category.category_name }}</h5>
-      <div>
-        <button class="btn btn-sm btn-outline-secondary back-to-cats">Back to categories</button>
-      </div>
-    </div>
-    <div class="mb-2 small text-muted">Category progress: <span class="cat-progress">0</span> / {{ category.questions|length }}</div>
+  <div id="attempt-meta" data-attempt-id="{{ attempt.id }}" data-remaining-seconds="{{ remaining_seconds }}" data-status="{{ attempt.status }}"></div>
 
-    {% for q in category.questions %}
-    <div class="card mb-2 question-card {% if q.attempted %}border-success{% endif %}" data-question-id="{{ q.id }}">
-      <div class="card-body">
-        <p><strong>{{ q.question_text }}</strong></p>
-
-        <form class="ajax-answer-form" method="post" action="{% url 'submit-answer' %}">
-          {% csrf_token %}
-          <input type="hidden" name="attempt" value="{{ attempt.id }}">
-          <input type="hidden" name="question" value="{{ q.id }}">
-
-          {% for key, opt in q.options.items %}
-          <div class="form-check">
-            <input class="form-check-input" type="radio"
-                   name="selected_option" value="{{ key }}"
-                   {% if q.selected_option == key %}checked{% endif %}>
-            <label class="form-check-label">{{ key }}. {{ opt }}</label>
-          </div>
+  <div class="row">
+    <!-- Category Sidebar -->
+    <div class="col-lg-3 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Categories</h6>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for category in categories %}
+          <a href="#" class="list-group-item list-group-item-action category-nav-item {% if forloop.first %}active{% endif %}" 
+             data-category-index="{{ forloop.counter0 }}" 
+             data-category-name="{{ category.category_name }}">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ category.category_name }}</strong>
+                <div class="small text-muted">
+                  {{ category.questions|length }} Question{{ category.questions|length|pluralize }}
+                </div>
+              </div>
+              <div class="category-status" data-category-index="{{ forloop.counter0 }}">
+                <span class="badge badge-secondary">0/{{ category.questions|length }}</span>
+              </div>
+            </div>
+          </a>
           {% endfor %}
-
-          <button class="btn btn-sm btn-primary mt-2 save-btn" data-question-id="{{ q.id }}">
-            <span class="save-text">Save</span>
-            <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-          </button>
-        </form>
+        </div>
+        <div class="card-footer">
+          <div class="text-center">
+            <div class="small text-muted mb-2">Overall Progress</div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar" id="overall-progress" style="width: 0%;"></div>
+            </div>
+            <div class="small text-muted mt-2" id="overall-progress-text">0 / {{ attempt.test.max_questions }} answered</div>
+          </div>
+        </div>
       </div>
     </div>
-    {% endfor %}
+
+    <!-- Questions Area -->
+    <div class="col-lg-9">
+      <!-- Category Header (shown when category selected) -->
+      <div id="category-header" class="card mb-3" style="display: none;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-1" id="current-category-name">Select a category to begin</h5>
+              <div class="small text-muted">
+                <span id="category-progress-text">0 / 0 answered</span>
+              </div>
+            </div>
+            <div class="progress" style="width: 200px; height: 6px;">
+              <div class="progress-bar" id="category-progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Questions Container -->
+      <div id="questions-container">
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-folder2-open" style="font-size: 3rem; color: var(--gray-400);"></i>
+            <h5 class="mt-3 text-muted">Select a category to view questions</h5>
+            <p class="text-muted small">Click on any category from the sidebar to start answering questions</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Test Button -->
+      <div class="card mt-3" id="submit-section" style="display: none;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">Ready to Submit?</h6>
+              <p class="small text-muted mb-0">Review your answers and submit when ready. You cannot change answers after submission.</p>
+            </div>
+            <form id="final-submit-form" method="post" action="{% url 'submit-test' attempt.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-lg" id="final-submit-btn">
+                <i class="bi bi-check-circle me-2"></i>Submit Test
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-{% endfor %}
 </div>
 
-<!-- Navigation is category-first; per-category pages are separate. -->
-
-<form id="final-submit-form" method="post" action="{% url 'submit-test' attempt.id %}" class="mt-4">
-  {% csrf_token %}
-  <button id="final-submit-btn" class="btn btn-danger">Submit Test</button>
-</form>
+<!-- Hidden template for questions -->
+<div id="question-template" style="display: none;">
+  <div class="question-card mb-3" data-question-id="">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-start mb-3">
+          <div class="question-number me-3">1</div>
+          <div class="flex-grow-1">
+            <h6 class="question-text mb-3"></h6>
+            
+            <div class="question-options">
+              <!-- Options will be inserted here -->
+            </div>
+            
+            <div class="mt-3">
+              <span class="badge badge-success answer-saved-badge" style="display: none;">
+                <i class="bi bi-check-circle me-1"></i>Answer Saved
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  (function(){
-    // helper to get csrftoken from cookie
-    function getCookie(name) {
-      let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-      return v ? v[2] : null;
-    }
+(function(){
+  // Helper functions
+  function getCookie(name) {
+    let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
 
-    // Utility to show toast messages
-    function showToast(text, success=true){
-      const msg = document.createElement('div');
-      msg.className = 'toast align-items-center ' + (success? 'text-bg-success':'text-bg-danger') + ' border-0 mb-2';
-      msg.innerHTML = '<div class="d-flex"><div class="toast-body">' + (text || '') + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
-      document.getElementById('toast-container').appendChild(msg);
-      try { bootstrap.Toast.getOrCreateInstance(msg, {delay:2000}).show(); } catch(e){ setTimeout(()=>msg.remove(),2000); }
-    }
+  function showToast(text, success=true){
+    const msg = document.createElement('div');
+    msg.className = 'toast align-items-center ' + (success? 'text-bg-success':'text-bg-danger') + ' border-0 mb-2';
+    msg.innerHTML = '<div class="d-flex"><div class="toast-body">' + (text || '') + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
+    document.getElementById('toast-container').appendChild(msg);
+    try { bootstrap.Toast.getOrCreateInstance(msg, {delay:2000}).show(); } catch(e){ setTimeout(()=>msg.remove(),2000); }
+  }
 
-    // Save button UX: disable + spinner
-    function setSavingState(btn, saving){
-      if (!btn) return;
-      var spinner = btn.querySelector('.spinner-border');
-      var text = btn.querySelector('.save-text');
-      if (saving){ btn.setAttribute('disabled','disabled'); if (spinner) spinner.classList.remove('d-none'); if (text) text.textContent = 'Saving'; }
-      else { btn.removeAttribute('disabled'); if (spinner) spinner.classList.add('d-none'); if (text) text.textContent = 'Save'; }
+  // Get attempt data
+  var attemptMeta = document.getElementById('attempt-meta');
+  var attemptId = attemptMeta.dataset.attemptId;
+  var remainingSeconds = parseInt(attemptMeta.dataset.remainingSeconds || 0, 10);
+  var attemptStatus = attemptMeta.dataset.status || 'ONGOING';
+  var isTestLocked = attemptStatus === 'COMPLETED';
+  
+  // Categories data
+  var categoriesData = {{ categories_json|safe }};
+  
+  // Current state
+  var currentCategoryIndex = null;
+  var answeredQuestions = {}; // {questionId: selectedOption}
+  var questionsData = {}; // Store all questions data
+  
+  // Show locked message if test is completed
+  if (isTestLocked) {
+    var container = document.querySelector('.test-attempt-container');
+    if (container) {
+      var resultUrl = '{% url "test-result" attempt.id %}';
+      container.innerHTML = 
+        '<div class="card">' +
+        '<div class="card-body text-center py-5">' +
+        '<i class="bi bi-lock-fill" style="font-size: 3rem; color: var(--gray-400);"></i>' +
+        '<h4 class="mt-3">Test Already Submitted</h4>' +
+        '<p class="text-muted">This test has been submitted and answers are locked.</p>' +
+        '<a href="' + resultUrl + '" class="btn btn-primary mt-3">' +
+        '<i class="bi bi-eye me-2"></i>View Results</a>' +
+        '</div></div>';
     }
-
-    // AJAX submit answer (with improved UX)
-    document.querySelectorAll('.ajax-answer-form').forEach(function(form){
-      form.addEventListener('submit', function(e){
-        e.preventDefault();
-        const btn = form.querySelector('.save-btn');
-        setSavingState(btn, true);
-        const url = form.getAttribute('action');
-        const formData = new FormData(form);
-        fetch(url, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'X-CSRFToken': getCookie('csrftoken') },
-          body: formData
-        }).then(r => r.json()).then(data => {
-          setSavingState(btn, false);
-          if (data && data.message) {
-            showToast(data.message, true);
-            var qid = data.question_id;
-            if (qid) {
-              var card = document.querySelector('.question-card[data-question-id="'+qid+'"]');
-              if (card) card.classList.add('border-success');
-            }
-          }
-          // update category progress
-          updateCategoryProgressForForm(form);
-        }).catch(err => { setSavingState(btn, false); showToast('Save failed', false); console.error(err); });
-      });
+  }
+  
+  // Initialize questions data
+  categoriesData.forEach(function(cat, catIdx) {
+    questionsData[catIdx] = cat.questions || [];
+    // Initialize answered questions from existing answers
+    (cat.questions || []).forEach(function(q) {
+      if (q.selected_option) {
+        answeredQuestions[q.id] = q.selected_option;
+      }
     });
+  });
 
-    function updateCategoryProgressForForm(form){
-      var cat = form.closest('.attempt-category');
-      if (!cat) return;
-      var total = cat.querySelectorAll('.question-card').length;
-      var done = cat.querySelectorAll('.question-card.border-success').length;
-      var el = cat.querySelector('.cat-progress');
-      if (el) el.textContent = done;
-      // also update tile badge if categories list visible
-      var idx = parseInt(cat.dataset.index, 10);
-      var tile = document.querySelector('.category-tile[data-index="'+idx+'"]');
-      if (tile){
-        var badge = tile.querySelector('.tile-progress');
-        if (!badge){ badge = document.createElement('div'); badge.className='small text-muted tile-progress mt-2'; tile.querySelector('.card-body').appendChild(badge); }
-        badge.textContent = done + ' / ' + total + ' done';
+  // Timer - Fixed time display
+  var timeDisplay = document.getElementById('time-left');
+  function formatTime(totalSeconds) {
+    if (totalSeconds <= 0) return '0:00';
+    
+    var hours = Math.floor(totalSeconds / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return hours + 'h ' + (minutes < 10 ? '0' : '') + minutes + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
+    } else if (minutes > 0) {
+      return minutes + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
+    } else {
+      return seconds + 's';
+    }
+  }
+  
+  // Initialize timer display
+  if (timeDisplay && !isTestLocked) {
+    // Ensure remainingSeconds is valid
+    if (isNaN(remainingSeconds) || remainingSeconds < 0) {
+      remainingSeconds = 0;
+    }
+    
+    timeDisplay.textContent = formatTime(remainingSeconds);
+    
+    var timer = setInterval(function() {
+      remainingSeconds = Math.max(0, remainingSeconds - 1);
+      if (timeDisplay) {
+        timeDisplay.textContent = formatTime(remainingSeconds);
+      }
+      
+      if (remainingSeconds <= 0) {
+        clearInterval(timer);
+        // Auto-submit
+        var submitForm = document.getElementById('final-submit-form');
+        if (submitForm) {
+          submitForm.submit();
+        }
+      }
+    }, 1000);
+  } else if (timeDisplay && isTestLocked) {
+    timeDisplay.textContent = 'Test Completed';
+  }
+
+  // Auto-save answer function
+  function saveAnswer(questionId, selectedOption) {
+    if (isTestLocked) {
+      showToast('Test has been submitted. Answers are locked.', false);
+      return;
+    }
+    
+    var formData = new FormData();
+    formData.append('attempt', attemptId);
+    formData.append('question', questionId);
+    formData.append('selected_option', selectedOption);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+    fetch('{% url "submit-answer" %}', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.message) {
+        answeredQuestions[questionId] = selectedOption;
+        updateProgress();
+        // Show saved badge
+        var questionCard = document.querySelector('.question-card[data-question-id="' + questionId + '"]');
+        if (questionCard) {
+          questionCard.classList.add('answered');
+          var badge = questionCard.querySelector('.answer-saved-badge');
+          if (badge) badge.style.display = 'inline-block';
+        }
+        showToast('Answer saved', true);
+      } else if (data && data.detail) {
+        showToast(data.detail, false);
+        if (data.detail.includes('submitted') || data.detail.includes('time over')) {
+          isTestLocked = true;
+          location.reload();
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Save failed:', err);
+      showToast('Failed to save answer', false);
+    });
+  }
+
+  // Render questions for a category
+  function renderCategoryQuestions(categoryIndex) {
+    if (categoryIndex === null || !questionsData[categoryIndex]) return;
+    
+    var category = categoriesData[categoryIndex];
+    var questions = questionsData[categoryIndex];
+    var container = document.getElementById('questions-container');
+    
+    container.innerHTML = '';
+    
+    if (questions.length === 0) {
+      container.innerHTML = '<div class="card"><div class="card-body text-center py-5"><p class="text-muted">No questions in this category.</p></div></div>';
+      return;
+    }
+    
+    questions.forEach(function(q, idx) {
+      var questionCard = document.createElement('div');
+      questionCard.className = 'question-card mb-3';
+      questionCard.setAttribute('data-question-id', q.id);
+      if (answeredQuestions[q.id]) {
+        questionCard.classList.add('answered');
+      }
+      
+      var isAnswered = !!answeredQuestions[q.id];
+      var selectedOption = answeredQuestions[q.id] || null;
+      
+      questionCard.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-start mb-3">
+              <div class="question-number me-3">${idx + 1}</div>
+              <div class="flex-grow-1">
+                <h6 class="question-text mb-3">${q.question_text}</h6>
+                
+                <div class="question-options">
+                  ${Object.keys(q.options).map(function(key) {
+                    var optionText = q.options[key];
+                    var isSelected = selectedOption === key;
+                    return `
+                      <div class="form-check mb-2 p-2 option-item ${isSelected ? 'selected' : ''}" style="border: 1px solid var(--gray-300); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;">
+                        <input class="form-check-input" type="radio" 
+                               name="question_${q.id}" 
+                               value="${key}" 
+                               id="q${q.id}_${key}"
+                               ${isSelected ? 'checked' : ''}>
+                        <label class="form-check-label w-100" for="q${q.id}_${key}" style="cursor: pointer;">
+                          <strong class="me-2">${key}.</strong>${optionText}
+                        </label>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+                
+                <div class="mt-3">
+                  <span class="badge badge-success answer-saved-badge" style="display: ${isAnswered ? 'inline-block' : 'none'};">
+                    <i class="bi bi-check-circle me-1"></i>Answer Saved
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(questionCard);
+      
+      // Disable inputs if test is locked
+      if (isTestLocked) {
+        questionCard.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+          radio.disabled = true;
+        });
+        questionCard.querySelectorAll('.option-item').forEach(function(item) {
+          item.style.cursor = 'not-allowed';
+          item.style.opacity = '0.7';
+        });
+      } else {
+        // Add auto-save on radio change
+        questionCard.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+          radio.addEventListener('change', function() {
+            if (this.checked) {
+              saveAnswer(q.id, this.value);
+              // Update visual state
+              questionCard.querySelectorAll('.option-item').forEach(function(item) {
+                item.classList.remove('selected');
+              });
+              this.closest('.option-item').classList.add('selected');
+            }
+          });
+        });
+      }
+    });
+  }
+
+  // Update progress indicators
+  function updateProgress() {
+    var totalQuestions = 0;
+    var totalAnswered = 0;
+    
+    categoriesData.forEach(function(cat, catIdx) {
+      var questions = questionsData[catIdx] || [];
+      var answered = questions.filter(function(q) { return answeredQuestions[q.id]; }).length;
+      totalQuestions += questions.length;
+      totalAnswered += answered;
+      
+      // Update category badge
+      var categoryNav = document.querySelector('.category-nav-item[data-category-index="' + catIdx + '"]');
+      if (categoryNav) {
+        var statusBadge = categoryNav.querySelector('.category-status');
+        if (statusBadge) {
+          statusBadge.innerHTML = '<span class="badge ' + (answered === questions.length && questions.length > 0 ? 'badge-success' : 'badge-secondary') + '">' + answered + '/' + questions.length + '</span>';
+        }
+      }
+    });
+    
+    // Update overall progress
+    var overallProgress = document.getElementById('overall-progress');
+    var overallProgressText = document.getElementById('overall-progress-text');
+    if (overallProgress && totalQuestions > 0) {
+      var percentage = (totalAnswered / totalQuestions) * 100;
+      overallProgress.style.width = percentage + '%';
+      overallProgressText.textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+    }
+    
+    // Update category progress if category is open
+    if (currentCategoryIndex !== null) {
+      var category = categoriesData[currentCategoryIndex];
+      var questions = questionsData[currentCategoryIndex] || [];
+      var answered = questions.filter(function(q) { return answeredQuestions[q.id]; }).length;
+      
+      var categoryProgressText = document.getElementById('category-progress-text');
+      var categoryProgressBar = document.getElementById('category-progress-bar');
+      
+      if (categoryProgressText) {
+        categoryProgressText.textContent = answered + ' / ' + questions.length + ' answered';
+      }
+      if (categoryProgressBar && questions.length > 0) {
+        var percentage = (answered / questions.length) * 100;
+        categoryProgressBar.style.width = percentage + '%';
       }
     }
-
-    // Category-first behavior: show categories list first
-    var categoryList = document.getElementById('category-list');
-    var categoriesWrap = document.getElementById('categories-wrap');
-    var cats = Array.from(document.querySelectorAll('.attempt-category'));
-
-    function openCategory(index){
-      if (!cats.length) return;
-      categoryList.style.display = 'none';
-      categoriesWrap.style.display = 'block';
-      cats.forEach((c, idx)=> c.style.display = (idx===index)?'block':'none');
-      currentIndex = index;
-      document.getElementById('cat-indicator').textContent = (index+1) + ' / ' + cats.length;
-      // update progress for that category
-      var el = cats[index].querySelector('.cat-progress');
-      if (el){ var total = cats[index].querySelectorAll('.question-card').length; var done = cats[index].querySelectorAll('.question-card.border-success').length; el.textContent = done; }
+    
+    // Show submit section if any questions answered
+    var submitSection = document.getElementById('submit-section');
+    if (submitSection && totalAnswered > 0) {
+      submitSection.style.display = 'block';
     }
+  }
 
-    document.querySelectorAll('.select-category').forEach(function(btn){
-      // if it's an <a> link, allow normal navigation; also wire JS for SPA behavior
-      btn.addEventListener('click', function(e){
-        try{
-          var idx = parseInt(btn.closest('.category-tile').dataset.index,10);
-          // if user used modifier keys or link target, skip SPA handling
-          if (e.defaultPrevented || e.metaKey || e.ctrlKey || btn.tagName === 'A' && (e.shiftKey || e.altKey)) return;
-          e.preventDefault();
-          openCategory(idx);
-        }catch(err){ /* ignore */ }
+  // Category navigation
+  document.querySelectorAll('.category-nav-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var categoryIndex = parseInt(this.dataset.categoryIndex);
+      
+      // Update active state
+      document.querySelectorAll('.category-nav-item').forEach(function(nav) {
+        nav.classList.remove('active');
       });
+      this.classList.add('active');
+      
+      // Show category
+      currentCategoryIndex = categoryIndex;
+      var category = categoriesData[categoryIndex];
+      
+      // Update category header
+      var categoryHeader = document.getElementById('category-header');
+      var categoryName = document.getElementById('current-category-name');
+      if (categoryHeader && categoryName) {
+        categoryHeader.style.display = 'block';
+        categoryName.textContent = category.category_name;
+      }
+      
+      // Render questions
+      renderCategoryQuestions(categoryIndex);
+      updateProgress();
     });
-    document.querySelectorAll('.back-to-cats').forEach(function(btn){ btn.addEventListener('click', function(){ categoriesWrap.style.display = 'none'; categoryList.style.display = 'flex'; }); });
+  });
 
-    // No in-page prev/next/jump controls in category-first UX.
-    var currentIndex = 0;
-
-    // initialize tile progress counts
-    cats.forEach(function(cat){ var idx = cat.dataset.index; var tile = document.querySelector('.category-tile[data-index="'+idx+'"]'); if (tile){ var total = cat.querySelectorAll('.question-card').length; var done = cat.querySelectorAll('.question-card.border-success').length; var badge = document.createElement('div'); badge.className='small text-muted tile-progress mt-2'; badge.textContent = done + ' / ' + total + ' done'; tile.querySelector('.card-body').appendChild(badge); } });
-
-    // determine initial view: open selected category if provided, else show category list
-    var selectedIdx = {{ selected_category_index|default:'null' }};
-    if (selectedIdx !== null) {
-      // show the requested category page
-      openCategory(selectedIdx);
-      categoryList.style.display = 'none';
-      categoriesWrap.style.display = 'block';
-    } else {
-      categoryList.style.display = 'flex';
-      categoriesWrap.style.display = 'none';
+  // Initialize - show first category if exists
+  if (categoriesData.length > 0) {
+    var firstCategory = document.querySelector('.category-nav-item');
+    if (firstCategory) {
+      firstCategory.click();
     }
+  }
 
-    // Final submit: allow normal form submit so server redirects to result page.
-
-    // Timer
-    var remaining = parseInt(document.getElementById('attempt-meta').dataset.remainingSeconds || 0, 10);
-    var display = document.getElementById('time-left');
-    function fmt(s){ var m = Math.floor(s/60), sec = s%60; return m + ' min ' + (sec<10?'0':'')+sec + ' sec'; }
-    display.textContent = fmt(remaining);
-    var timer = setInterval(function(){ remaining = Math.max(0, remaining-1); display.textContent = fmt(remaining); if (remaining <= 0){ clearInterval(timer); fetch(finalForm.getAttribute('action'), { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': getCookie('csrftoken') } }).then(r=>r.json()).then(data => { window.location = '/result/' + (data.attempt_id || '{{ attempt.id }}') + '/'; }).catch(()=>{ window.location = '/result/{{ attempt.id }}/'; }); } }, 1000);
-
-  })();
+  // Initialize progress
+  updateProgress();
+})();
 </script>
+
+<style>
+.question-number {
+  width: 35px;
+  height: 35px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.question-card.answered {
+  border-left: 4px solid var(--success);
+}
+
+.option-item:hover {
+  background: var(--gray-50);
+  border-color: var(--primary) !important;
+}
+
+.option-item.selected {
+  background: var(--info-light);
+  border-color: var(--info) !important;
+}
+
+.category-nav-item.active {
+  background: var(--gray-50);
+  border-left: 3px solid var(--primary);
+}
+
+.timer-display-inline {
+  font-size: 1.1rem;
+  color: var(--gray-700);
+}
+
+.timer-display-inline strong {
+  color: var(--primary);
+  font-size: 1.25rem;
+}
+</style>
 {% endblock %}

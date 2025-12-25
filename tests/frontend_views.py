@@ -19,6 +19,25 @@ def start_attempt_view(request, test_id):
     if not user:
         return redirect("login_page")
 
+    # Check if there's an ongoing attempt for this test
+    ongoing_attempt = TestAttempt.objects.filter(
+        user_id=user_id,
+        test_id=test_id,
+        status="ONGOING"
+    ).first()
+
+    if ongoing_attempt:
+        # Check if time is still valid
+        if not ongoing_attempt.is_time_over():
+            # Continue existing attempt
+            return redirect(reverse('test-attempt', args=[ongoing_attempt.id]))
+        else:
+            # Time is over, mark as completed
+            ongoing_attempt.status = "COMPLETED"
+            ongoing_attempt.completed_at = timezone.now()
+            ongoing_attempt.save()
+
+    # Create new attempt
     serializer = StartTestSerializer(data={"test_id": test_id}, context={"request": request})
     try:
         serializer.is_valid(raise_exception=True)
@@ -45,8 +64,14 @@ def dashboard_view(request):
     completed_attempts = TestAttempt.objects.filter(
         user_id=user_id,
         status="COMPLETED"
-    )
+    ).order_by('-completed_at', '-started_at')  # Latest first
     attempt_count = completed_attempts.count()
+    
+    # Get ongoing attempts
+    ongoing_attempts = TestAttempt.objects.filter(
+        user_id=user_id,
+        status="ONGOING"
+    ).order_by('-started_at')
 
     # optional highlight attempt id from querystring
     highlight_attempt = request.GET.get('highlight')
@@ -54,6 +79,7 @@ def dashboard_view(request):
     return render(request, "dashboard/dashboard.html", {
         "tests": tests,
         "completed_attempts": completed_attempts,
+        "ongoing_attempts": ongoing_attempts,
         "current_user": current_user,
         "highlight_attempt": highlight_attempt,
         "attempt_count": attempt_count,
@@ -79,11 +105,14 @@ def test_attempt_view(request, attempt_id, index=None):
     elapsed = (timezone.now() - started).total_seconds()
     remaining = int(max(0, duration_seconds - elapsed))
 
+    import json
+    categories_data = serializer.data["categories"]
+
     return render(request, "test/attempt.html", {
         "attempt": attempt,
-        "categories": serializer.data["categories"],
+        "categories": categories_data,
+        "categories_json": json.dumps(categories_data),
         "remaining_seconds": remaining,
-        "selected_category_index": int(index) if index is not None else None,
     })
 
 
@@ -96,11 +125,14 @@ def test_result_view(request, attempt_id):
     if not user_id:
         return redirect("login_page")
 
-
-    attempt = TestAttempt.objects.get(
-        id=attempt_id,
-        user_id=user_id
-    )
+    try:
+        attempt = TestAttempt.objects.get(
+            id=attempt_id,
+            user_id=user_id
+        )
+    except TestAttempt.DoesNotExist:
+        messages.error(request, "Test attempt not found.")
+        return redirect("dashboard")
 
     serializer = TestResultSerializer(attempt)
     result_data = serializer.data

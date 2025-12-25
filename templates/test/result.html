@@ -3,18 +3,36 @@
 {% block title %}Test Result{% endblock %}
 
 {% block content %}
-<div id="result-root">
-  <h4 id="result-title">Result</h4>
+<div id="result-root" class="fade-in">
+  <!-- Result Header -->
+  <div class="result-header">
+    <h2 id="result-title" class="mb-3">
+      <i class="bi bi-trophy-fill me-2"></i>Test Results
+    </h2>
+    <div id="result-summary" class="mb-4"></div>
+    <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
+      <div class="text-center">
+        <div class="text-muted small mb-1">
+          <i class="bi bi-clock me-1"></i>Time Taken
+        </div>
+        <div class="fw-bold" id="time-taken">—</div>
+      </div>
+    </div>
+  </div>
 
-  <div id="result-summary" class="mb-3"></div>
+  <!-- Categories Results -->
+  <div id="result-categories" class="mb-4"></div>
 
-  <p><strong>Time Taken:</strong> <span id="time-taken"></span></p>
-
-  <div id="result-categories"></div>
-
-  <div class="mt-4">
-    <a id="back-dashboard" href="/dashboard/" class="btn btn-outline-primary">Back to Dashboard</a>
-    <a id="download-result" class="btn btn-outline-secondary ms-2" target="_blank">Export CSV</a>
+  <!-- Action Buttons -->
+  <div class="card">
+    <div class="card-body text-center">
+      <a id="back-dashboard" href="/dashboard/" class="btn btn-primary btn-lg me-2">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+      </a>
+      <a id="download-result" class="btn btn-outline-secondary btn-lg" target="_blank">
+        <i class="bi bi-download me-1"></i>Export CSV
+      </a>
+    </div>
   </div>
 </div>
 
@@ -22,69 +40,162 @@
   (function(){
     // Render helper
     function render(result){
-      document.getElementById('result-title').textContent = (result.test_name || ('Test ' + (result.test || ''))) + ' – Result';
+      document.getElementById('result-title').innerHTML = '<i class="bi bi-trophy-fill me-2"></i>' + (result.test_name || ('Test ' + (result.test || ''))) + ' – Results';
+      
       var summary = document.getElementById('result-summary');
-      summary.className = 'alert ' + (result.passed ? 'alert-success' : 'alert-danger');
-      summary.textContent = 'Score: ' + result.score + '/' + result.max_score + ' | ' + result.percentage + '% | ' + (result.passed ? 'PASSED' : 'FAILED');
+      summary.innerHTML = '';
+      
+      // Score Display
+      var scoreDiv = document.createElement('div');
+      scoreDiv.className = 'result-score';
+      scoreDiv.textContent = result.score + ' / ' + result.max_score;
+      summary.appendChild(scoreDiv);
+      
+      // Percentage
+      var percentageDiv = document.createElement('div');
+      percentageDiv.className = 'mb-3';
+      percentageDiv.innerHTML = '<span style="font-size: 1.5rem; font-weight: 600; color: var(--gray-700);">' + result.percentage + '%</span>';
+      summary.appendChild(percentageDiv);
+      
+      // Pass/Fail Badge
+      var badge = document.createElement('span');
+      badge.className = 'result-badge ' + (result.passed ? 'passed' : 'failed');
+      badge.innerHTML = '<i class="bi bi-' + (result.passed ? 'check-circle' : 'x-circle') + '-fill me-1"></i>' + (result.passed ? 'PASSED' : 'FAILED');
+      summary.appendChild(badge);
 
       document.getElementById('time-taken').textContent = result.time_taken || '—';
 
       var cats = document.getElementById('result-categories');
       cats.innerHTML = '';
+      
       result.categories.forEach(function(cat){
-        var h = document.createElement('h5'); h.textContent = cat.category_name;
-        // show category score as a neutral badge
-        var scoreBadge = document.createElement('span'); scoreBadge.className = 'badge bg-info ms-2'; scoreBadge.textContent = 'Score: ' + (cat.category_score || 0);
-        h.appendChild(scoreBadge);
-        // compute attempted / total
+        // Category Card
+        var catCard = document.createElement('div');
+        catCard.className = 'category-result-card';
+        
+        // Category Header
+        var catHeader = document.createElement('div');
+        catHeader.className = 'd-flex justify-content-between align-items-center mb-3 flex-wrap';
+        
+        var catTitle = document.createElement('h5');
+        catTitle.className = 'mb-0';
+        catTitle.innerHTML = '<i class="bi bi-folder-fill me-2 text-primary"></i>' + cat.category_name;
+        catHeader.appendChild(catTitle);
+        
+        var catBadges = document.createElement('div');
+        catBadges.className = 'd-flex gap-2 flex-wrap';
+        
+        var scoreBadge = document.createElement('span');
+        scoreBadge.className = 'badge badge-info';
+        scoreBadge.innerHTML = '<i class="bi bi-star-fill me-1"></i>Score: ' + (cat.category_score || 0);
+        catBadges.appendChild(scoreBadge);
+        
         var totalQ = (cat.questions || []).length;
         var attempted = (cat.questions || []).filter(function(q){ return !!q.attempted; }).length;
-        var badge = document.createElement('span'); badge.className = 'badge bg-secondary ms-2';
-        if (attempted === totalQ && totalQ>0) { badge.className = 'badge bg-secondary ms-2'; badge.textContent = 'Completed'; }
-        else { badge.textContent = attempted + ' / ' + totalQ + ' attempted'; }
-        h.appendChild(badge);
-        cats.appendChild(h);
-        var ul = document.createElement('ul'); ul.className = 'list-group mb-3';
-        cat.questions.forEach(function(q){
-          var li = document.createElement('li');
-          li.className = 'list-group-item';
-          // selected and correct values (letter + text)
-          var selectedText = '-';
+        var progressBadge = document.createElement('span');
+        progressBadge.className = 'badge ' + (attempted === totalQ && totalQ > 0 ? 'badge-success' : 'badge-warning');
+        progressBadge.innerHTML = '<i class="bi bi-' + (attempted === totalQ ? 'check-circle' : 'clock') + ' me-1"></i>' + attempted + ' / ' + totalQ + ' answered';
+        catBadges.appendChild(progressBadge);
+        
+        catHeader.appendChild(catBadges);
+        catCard.appendChild(catHeader);
+        
+        // Questions
+        cat.questions.forEach(function(q, idx){
+          var qItem = document.createElement('div');
+          qItem.className = 'question-result-item ' + (q.attempted && q.is_correct ? 'correct' : (q.attempted ? 'incorrect' : ''));
+          
+          var qHeader = document.createElement('div');
+          qHeader.className = 'd-flex align-items-start mb-2';
+          
+          var qNum = document.createElement('div');
+          qNum.className = 'bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 me-3';
+          qNum.style.cssText = 'width: 30px; height: 30px; font-weight: 600; font-size: 0.875rem;';
+          qNum.textContent = idx + 1;
+          qHeader.appendChild(qNum);
+          
+          var qContent = document.createElement('div');
+          qContent.className = 'flex-grow-1';
+          
+          var qTitle = document.createElement('strong');
+          qTitle.style.cssText = 'display: block; margin-bottom: 0.5rem;';
+          qTitle.textContent = q.question_text;
+          qContent.appendChild(qTitle);
+          
+          // Status Icon
+          if (q.attempted) {
+            var statusIcon = document.createElement('span');
+            statusIcon.className = 'badge ' + (q.is_correct ? 'badge-success' : 'badge-danger') + ' me-2';
+            statusIcon.innerHTML = '<i class="bi bi-' + (q.is_correct ? 'check-circle' : 'x-circle') + '-fill me-1"></i>' + (q.is_correct ? 'Correct' : 'Incorrect');
+            qTitle.appendChild(statusIcon);
+          }
+          
+          // Selected Answer
+          var selectedText = 'Not answered';
           if (q.selected_option) {
             var sVal = q.options && q.options[q.selected_option] ? q.options[q.selected_option] : '';
-            selectedText = q.selected_option + ' — ' + sVal;
+            selectedText = q.selected_option + '. ' + sVal;
           }
-          var correctText = q.correct_option + ' — ' + (q.options && q.options[q.correct_option] ? q.options[q.correct_option] : '');
-          var icon = '';
-          if (q.attempted) { icon = q.is_correct ? '<span class="badge bg-success me-2">✓</span>' : '<span class="badge bg-danger me-2">✗</span>'; }
-          li.innerHTML = icon + '<strong>'+q.question_text+'</strong><br>' +
-              '<small>Selected: ' + selectedText + ' | Correct: ' + correctText + '</small>' +
-              (q.answer_explanation ? ('<div class="mt-1 small text-muted">' + q.answer_explanation + '</div>') : '');
-          ul.appendChild(li);
+          var selectedDiv = document.createElement('div');
+          selectedDiv.className = 'small mb-1';
+          selectedDiv.innerHTML = '<i class="bi bi-circle me-1"></i><strong>Your Answer:</strong> <span class="' + (q.attempted && !q.is_correct ? 'text-danger' : '') + '">' + selectedText + '</span>';
+          qContent.appendChild(selectedDiv);
+          
+          // Correct Answer
+          var correctText = q.correct_option + '. ' + (q.options && q.options[q.correct_option] ? q.options[q.correct_option] : '');
+          var correctDiv = document.createElement('div');
+          correctDiv.className = 'small mb-2';
+          correctDiv.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>Correct Answer:</strong> <span class="text-success">' + correctText + '</span>';
+          qContent.appendChild(correctDiv);
+          
+          // Explanation
+          if (q.answer_explanation) {
+            var expDiv = document.createElement('div');
+            expDiv.className = 'mt-2 p-2 rounded';
+            expDiv.style.cssText = 'background: var(--info-light); border-left: 3px solid var(--info);';
+            expDiv.innerHTML = '<i class="bi bi-info-circle me-1"></i><strong>Explanation:</strong> ' + q.answer_explanation;
+            qContent.appendChild(expDiv);
+          }
+          
+          qHeader.appendChild(qContent);
+          qItem.appendChild(qHeader);
+          catCard.appendChild(qItem);
         });
-        cats.appendChild(ul);
+        
+        cats.appendChild(catCard);
       });
 
       // back to dashboard highlight
       var back = document.getElementById('back-dashboard');
       back.href = '/dashboard/?highlight=' + result.id;
-        // export link — export this attempt as CSV
-        document.getElementById('download-result').href = '/api/attempts/' + result.id + '/export/';
+      // export link — export this attempt as CSV
+      document.getElementById('download-result').href = '/api/attempts/' + result.id + '/export/';
     }
 
-    // If server-side provided `result` variable, render immediately, otherwise fetch latest
-      var initial = null;
-      try{ initial = JSON.parse('{{ result_json|default:'null'|escapejs }}'); }catch(e){ initial = null; }
+    // Render from server-side data (always available from template)
+    var initial = null;
+    try{ 
+      var resultJson = '{{ result_json|escapejs }}';
+      if (resultJson && resultJson !== 'null' && resultJson !== '') {
+        initial = JSON.parse(resultJson); 
+      }
+    }catch(e){ 
+      console.error('Error parsing result JSON:', e);
+      initial = null; 
+    }
+    
     if (initial) {
       render(initial);
+    } else {
+      // Fallback: show error message
+      document.getElementById('result-root').innerHTML = 
+        '<div class="card"><div class="card-body text-center py-5">' +
+        '<i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: var(--gray-400);"></i>' +
+        '<h5 class="mt-3">Unable to Load Results</h5>' +
+        '<p class="text-muted">Please try again or contact support.</p>' +
+        '<a href="/dashboard/" class="btn btn-primary mt-3">Back to Dashboard</a>' +
+        '</div></div>';
     }
-
-    // Always try to fetch fresh data from API
-    (function fetchLatest(){
-      var attemptId = {{ attempt_id }};
-      fetch('/api/attempts/' + attemptId + '/result/', { credentials: 'same-origin' })
-        .then(r => r.json()).then(data => render(data)).catch(()=>{});
-    })();
   })();
 </script>
 {% endblock %}
