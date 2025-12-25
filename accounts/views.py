@@ -51,11 +51,12 @@ class CustomLoginAPIView(APIView):
         user = serializer.validated_data["user"]
 
         refresh = RefreshToken.for_user(user)
-
+        serializer = UserSerializer(user)
         return Response(
             {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
+                "user": serializer.data,
             },
             status=status.HTTP_200_OK
         )

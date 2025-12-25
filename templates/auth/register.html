@@ -8,37 +8,37 @@
             <div class="card-body">
                 <h4 class="text-center mb-4">Create Account</h4>
 
+                {% if form %}
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                </form>
+                {% else %}
                 {% if error %}
                     <div class="alert alert-danger">{{ error }}</div>
                 {% endif %}
-
                 <form method="post">
                     {% csrf_token %}
-
                     <div class="mb-3">
                         <label>Username</label>
                         <input type="text" name="username" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
                         <label>Email</label>
                         <input type="email" name="email" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
                         <label>Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
                         <label>Confirm Password</label>
                         <input type="password" name="confirm_password" class="form-control" required>
                     </div>
-
-                    <button type="submit" class="btn btn-primary w-100">
-                        Register
-                    </button>
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
                 </form>
+                {% endif %}
 
                 <p class="text-center mt-3">
                     Already have an account?

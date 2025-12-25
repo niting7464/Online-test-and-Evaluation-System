@@ -1,24 +1,31 @@
-from django.conf import settings
-import requests
+from django.contrib.auth import get_user_model
 
-API_BASE_URL = getattr(settings, "API_BASE_URL", "http://127.0.0.1:8000/api/auth")
 
-def auth_user(request):
+def current_user(request):
+    """Context processor that exposes `current_user` to templates.
+
+    It prefers `request.user` (set by authentication or SessionUserMiddleware),
+    but will attempt to resolve from session['user_id'] as a fallback.
     """
-    Adds 'current_user' to templates based on session tokens.
-    """
-    user_info = None
-    access = request.session.get("access")
+    user = None
+    try:
+        user = getattr(request, "user", None)
+    except Exception:
+        user = None
 
-    if access:
-        try:
-            response = requests.get(
-                f"{API_BASE_URL}/me/",  # endpoint returning logged-in user info
-                headers={"Authorization": f"Bearer {access}"}
-            )
-            if response.status_code == 200:
-                user_info = response.json()
-        except Exception:
-            pass
+    if user and getattr(user, "is_authenticated", False):
+        return {"current_user": user}
 
-    return {"current_user": user_info}
+    # fallback: try to resolve from session
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return {"current_user": None}
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        user = None
+
+    return {"current_user": user}
+

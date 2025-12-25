@@ -3,27 +3,88 @@
 {% block title %}Test Result{% endblock %}
 
 {% block content %}
-<h4>{{ result.test.name }} – Result</h4>
+<div id="result-root">
+  <h4 id="result-title">Result</h4>
 
-<div class="alert {% if result.passed %}alert-success{% else %}alert-danger{% endif %}">
-  Score: {{ result.score }}/{{ result.max_score }} |
-  {{ result.percentage }}% |
-  {% if result.passed %}PASSED{% else %}FAILED{% endif %}
+  <div id="result-summary" class="mb-3"></div>
+
+  <p><strong>Time Taken:</strong> <span id="time-taken"></span></p>
+
+  <div id="result-categories"></div>
+
+  <div class="mt-4">
+    <a id="back-dashboard" href="/dashboard/" class="btn btn-outline-primary">Back to Dashboard</a>
+    <a id="download-result" class="btn btn-outline-secondary ms-2" target="_blank">Export CSV</a>
+  </div>
 </div>
 
-<p><strong>Time Taken:</strong> {{ result.time_taken }}</p>
+<script>
+  (function(){
+    // Render helper
+    function render(result){
+      document.getElementById('result-title').textContent = (result.test_name || ('Test ' + (result.test || ''))) + ' – Result';
+      var summary = document.getElementById('result-summary');
+      summary.className = 'alert ' + (result.passed ? 'alert-success' : 'alert-danger');
+      summary.textContent = 'Score: ' + result.score + '/' + result.max_score + ' | ' + result.percentage + '% | ' + (result.passed ? 'PASSED' : 'FAILED');
 
-{% for cat in result.categories %}
-<h5>{{ cat.category_name }} ({{ cat.category_score }})</h5>
+      document.getElementById('time-taken').textContent = result.time_taken || '—';
 
-<ul class="list-group mb-3">
-  {% for q in cat.questions %}
-  <li class="list-group-item {% if q.is_correct %}list-group-item-success{% else %}list-group-item-danger{% endif %}">
-    <strong>{{ q.question_text }}</strong><br>
-    Selected: {{ q.selected_option }} |
-    Correct: {{ q.correct_option }}
-  </li>
-  {% endfor %}
-</ul>
-{% endfor %}
+      var cats = document.getElementById('result-categories');
+      cats.innerHTML = '';
+      result.categories.forEach(function(cat){
+        var h = document.createElement('h5'); h.textContent = cat.category_name;
+        // show category score as a neutral badge
+        var scoreBadge = document.createElement('span'); scoreBadge.className = 'badge bg-info ms-2'; scoreBadge.textContent = 'Score: ' + (cat.category_score || 0);
+        h.appendChild(scoreBadge);
+        // compute attempted / total
+        var totalQ = (cat.questions || []).length;
+        var attempted = (cat.questions || []).filter(function(q){ return !!q.attempted; }).length;
+        var badge = document.createElement('span'); badge.className = 'badge bg-secondary ms-2';
+        if (attempted === totalQ && totalQ>0) { badge.className = 'badge bg-secondary ms-2'; badge.textContent = 'Completed'; }
+        else { badge.textContent = attempted + ' / ' + totalQ + ' attempted'; }
+        h.appendChild(badge);
+        cats.appendChild(h);
+        var ul = document.createElement('ul'); ul.className = 'list-group mb-3';
+        cat.questions.forEach(function(q){
+          var li = document.createElement('li');
+          li.className = 'list-group-item';
+          // selected and correct values (letter + text)
+          var selectedText = '-';
+          if (q.selected_option) {
+            var sVal = q.options && q.options[q.selected_option] ? q.options[q.selected_option] : '';
+            selectedText = q.selected_option + ' — ' + sVal;
+          }
+          var correctText = q.correct_option + ' — ' + (q.options && q.options[q.correct_option] ? q.options[q.correct_option] : '');
+          var icon = '';
+          if (q.attempted) { icon = q.is_correct ? '<span class="badge bg-success me-2">✓</span>' : '<span class="badge bg-danger me-2">✗</span>'; }
+          li.innerHTML = icon + '<strong>'+q.question_text+'</strong><br>' +
+              '<small>Selected: ' + selectedText + ' | Correct: ' + correctText + '</small>' +
+              (q.answer_explanation ? ('<div class="mt-1 small text-muted">' + q.answer_explanation + '</div>') : '');
+          ul.appendChild(li);
+        });
+        cats.appendChild(ul);
+      });
+
+      // back to dashboard highlight
+      var back = document.getElementById('back-dashboard');
+      back.href = '/dashboard/?highlight=' + result.id;
+        // export link — export this attempt as CSV
+        document.getElementById('download-result').href = '/api/attempts/' + result.id + '/export/';
+    }
+
+    // If server-side provided `result` variable, render immediately, otherwise fetch latest
+      var initial = null;
+      try{ initial = JSON.parse('{{ result_json|default:'null'|escapejs }}'); }catch(e){ initial = null; }
+    if (initial) {
+      render(initial);
+    }
+
+    // Always try to fetch fresh data from API
+    (function fetchLatest(){
+      var attemptId = {{ attempt_id }};
+      fetch('/api/attempts/' + attemptId + '/result/', { credentials: 'same-origin' })
+        .then(r => r.json()).then(data => render(data)).catch(()=>{});
+    })();
+  })();
+</script>
 {% endblock %}

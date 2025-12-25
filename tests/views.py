@@ -25,6 +25,10 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.http import StreamingHttpResponse
+import csv
 import csv
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -263,14 +267,13 @@ class SubmitAnswerAPIView(APIView):
             )
 
         # 🔹 Save or update answer
+        is_correct = selected_option == question.correct_option
+        # Save selected option and correctness
         answer, _ = UserAnswer.objects.update_or_create(
             attempt=attempt,
             question=question,
-            defaults={"selected_option": selected_option}
+            defaults={"selected_option": selected_option, "is_correct": is_correct}
         )
-
-        # 🔹 Evaluate correctness
-        is_correct = selected_option == question.correct_option
         marks_awarded = question.marks if is_correct else 0
 
         return Response({
@@ -295,9 +298,15 @@ class SubmitTestAPIView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         attempt = serializer.save()
+        # If the client expects HTML (regular browser form submit), redirect
+        # to the frontend result page explicitly to avoid name collisions
+        accept = request.META.get('HTTP_ACCEPT', '')
+        if 'text/html' in accept:
+            return redirect(f'/result/{attempt.id}/')
 
         return Response({
             "message": "Test submitted successfully.",
+            "attempt_id": attempt.id,
             "score": attempt.score,
             "status": attempt.status,
             "result_status": attempt.calculate_pass_fail()
@@ -398,6 +407,73 @@ class AdminTestResultsCSVExportAPIView(APIView):
                 attempt.started_at,
                 attempt.completed_at
             ])
+
+
+class ExportAttemptCSVAPIView(APIView):
+    """Export a single attempt as CSV for the attempt owner or admins."""
+    permission_classes = [IsAuthenticated,]
+
+    def get(self, request, attempt_id):
+        try:
+            attempt = TestAttempt.objects.get(id=attempt_id)
+        except TestAttempt.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # only owner or staff can export
+        user = request.user
+        if not (user.is_staff or attempt.user_id == user.id):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        # build CSV
+        import io
+        def stream():
+            out = io.StringIO()
+            writer = csv.writer(out)
+            # Attempt summary header
+            writer.writerow(["ID","User","Test","Score","Max Score","Percentage","Status","Passed","Time Taken","Started At","Completed At"])
+            yield out.getvalue(); out.seek(0); out.truncate(0)
+
+            max_score = sum(category.question_set.count() for category in attempt.categories.all())
+            percentage = round((attempt.score / max_score) * 100, 2) if max_score > 0 else 0
+            passed = attempt.calculate_pass_fail()["passed"]
+            time_taken = ""
+            if attempt.completed_at:
+                total_seconds = int((attempt.completed_at - attempt.started_at).total_seconds())
+                minutes, seconds = divmod(total_seconds, 60)
+                time_taken = f"{minutes} min {seconds} sec"
+            writer.writerow([attempt.id, attempt.user.username, attempt.test.name, attempt.score, max_score, percentage, attempt.status, "PASS" if passed else "FAIL", time_taken, attempt.started_at, attempt.completed_at])
+            yield out.getvalue(); out.seek(0); out.truncate(0)
+
+            # Per-question details
+            writer.writerow([])
+            writer.writerow(["Question ID","Question Text","Selected Option","Selected Value","Correct Option","Correct Value","Is Correct","Marks"])
+            yield out.getvalue(); out.seek(0); out.truncate(0)
+
+            # collect questions in attempt order
+            questions = []
+            for cat in attempt.categories.prefetch_related('question_set'):
+                for q in cat.question_set.all().distinct():
+                    if q.id not in [x.id for x in questions]:
+                        questions.append(q)
+
+            for q in questions:
+                ans = attempt.answers.filter(question=q).first()
+                sel = ans.selected_option if ans else ''
+                sel_text = ''
+                if sel == 'A': sel_text = q.option_a
+                elif sel == 'B': sel_text = q.option_b
+                elif sel == 'C': sel_text = q.option_c
+                elif sel == 'D': sel_text = q.option_d
+                corr = q.correct_option
+                corr_text = q.option_a if corr=='A' else (q.option_b if corr=='B' else (q.option_c if corr=='C' else q.option_d))
+                is_corr = 'TRUE' if ans and ans.is_correct else 'FALSE'
+                writer.writerow([q.id, q.question_text, sel, sel_text, corr, corr_text, is_corr, q.marks])
+                yield out.getvalue(); out.seek(0); out.truncate(0)
+
+        filename = f"attempt_{attempt.id}.csv"
+        response = StreamingHttpResponse(stream(), content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
         return response
     

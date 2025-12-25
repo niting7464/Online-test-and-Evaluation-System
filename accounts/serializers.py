@@ -21,6 +21,9 @@ class UserSignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "Passwords do not match"}
             )
+        # ensure unique email
+        if User.objects.filter(email=data.get('email')).exists():
+            raise serializers.ValidationError({"email": "Email already in use"})
         return data
 
     def create(self, validated_data):

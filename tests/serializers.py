@@ -381,12 +381,14 @@ class TestResultSerializer(serializers.ModelSerializer):
     percentage = serializers.SerializerMethodField()
     passed = serializers.SerializerMethodField()
     time_taken = serializers.SerializerMethodField()
+    test_name = serializers.SerializerMethodField()
 
     class Meta:
         model = TestAttempt
         fields = [
             "id",
             "test",
+            "test_name",
             "score",
             "max_score",
             "status",
@@ -428,6 +430,9 @@ class TestResultSerializer(serializers.ModelSerializer):
         delta = obj.completed_at - obj.started_at
         minutes, seconds = divmod(int(delta.total_seconds()), 60)
         return f"{minutes} min {seconds} sec"
+
+    def get_test_name(self, obj):
+        return getattr(obj.test, 'name', None)
 
     
     

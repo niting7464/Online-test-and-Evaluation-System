@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Attempted Tests{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Your Attempts</h3>
+
+<div class="list-group">
+  {% for a in attempts %}
+    <div class="list-group-item d-flex justify-content-between align-items-start">
+      <div>
+        <div class="fw-bold">{{ a.test.name }}</div>
+        <div class="small text-muted">Started: {{ a.started_at }} • Status: {{ a.status }}</div>
+        <div class="small mt-1">Score: {{ a.score }} / {{ a.test.total_marks }}</div>
+      </div>
+      <div class="btn-group-vertical">
+        <a href="/result/{{ a.id }}/" class="btn btn-sm btn-outline-primary mb-1">View Result</a>
+        <a href="/api/attempts/{{ a.id }}/export/" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="list-group-item">You have not attempted any tests yet.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

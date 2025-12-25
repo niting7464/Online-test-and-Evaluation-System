@@ -122,11 +122,20 @@ class TestAttempt(models.Model):
 
     # 🔹 Pass / Fail logic
     def calculate_pass_fail(self):
-        total_marks = sum(q.marks for q in self.test.questions.all())
-        passing_percentage = getattr(self.test, "passing_percentage", 50)
-        passing_marks = (passing_percentage / 100) * total_marks
+        # Calculate total marks from questions assigned in this attempt
+        total_marks = 0
+        for cat in self.categories.prefetch_related('question_set').all():
+            for q in cat.question_set.all().distinct():
+                total_marks += getattr(q, 'marks', 0)
 
-        passed = self.score >= passing_marks
+        # Prefer explicit passing_marks on Test, fallback to percentage-based or 50%
+        if getattr(self.test, 'passing_marks', None) is not None:
+            passing_marks = self.test.passing_marks
+        else:
+            passing_percentage = getattr(self.test, "passing_percentage", 50)
+            passing_marks = (passing_percentage / 100) * total_marks
+
+        passed = self.score >= passing_marks if total_marks else False
         return {
             "passed": passed,
             "status": "PASS" if passed else "FAIL"

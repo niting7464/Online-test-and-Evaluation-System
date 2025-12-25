@@ -3,7 +3,11 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+{% if current_user and current_user.is_authenticated %}
 <h3 class="mb-4">Welcome, {{ current_user.username }}</h3>
+{% else %}
+<h3 class="mb-4">Welcome</h3>
+{% endif %}
 
 
 <div class="row">
@@ -13,7 +17,7 @@
       {% for test in tests %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           {{ test.name }}
-          <a href="{% url 'test-attempt' test.id %}" class="btn btn-sm btn-primary">Start</a>
+          <a href="{% url 'start-attempt' test.id %}" class="btn btn-sm btn-primary">Start</a>
         </li>
       {% empty %}
         <li class="list-group-item">No ongoing tests.</li>
@@ -25,15 +29,25 @@
     <h5>Completed Tests</h5>
     <ul class="list-group">
       {% for attempt in completed_attempts %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ attempt.test.name }}
-          <span>Score: {{ attempt.score }}</span>
-          <a href="{% url 'test-result' attempt.id %}" class="btn btn-sm btn-success">View Result</a>
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if attempt.id|stringformat:"s" == highlight_attempt %}border-primary bg-light{% endif %}">
+          <div>
+            <strong>{{ attempt.test.name }}</strong>
+            {% if attempt.id|stringformat:"s" == highlight_attempt %}
+              <div class="text-primary small">Latest attempt</div>
+            {% endif %}
+          </div>
+          <div class="text-end">
+            <div>Score: {{ attempt.score }}</div>
+            <a href="/result/{{ attempt.id }}/" class="btn btn-sm btn-success mt-1">View Result</a>
+          </div>
         </li>
       {% empty %}
         <li class="list-group-item">No completed tests.</li>
       {% endfor %}
     </ul>
+    <div class="mt-3">
+      <a href="{% url 'attempted-tests' %}" class="btn btn-sm btn-outline-secondary">View all attempts</a>
+    </div>
   </div>
 </div>
 {% endblock %}
