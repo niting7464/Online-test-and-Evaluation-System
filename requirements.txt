@@ -14,3 +14,8 @@ requests==2.32.5
 sqlparse==0.5.5
 typing_extensions==4.15.0
 urllib3==2.6.2
+
+# Production / deployment
+gunicorn==21.2.0
+whitenoise==6.5.0
+# psycopg2-binary already present above; keep for postgres

@@ -1,0 +1,40 @@
+# Render service manifest for Mindsprint Django app
+services:
+  - type: web
+    name: mindsprint-web
+    env: python
+    plan: starter
+    repo: ""
+    branch: main
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
+    startCommand: gunicorn mindsprint.wsgi:application --bind 0.0.0.0:$PORT
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        value: "REPLACE_ME"
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "your-domain.com"
+      - key: DATABASE_URL
+        fromDatabase: true
+      - key: PASSWORD_RESET_DOMAIN
+        value: "https://your-domain.com"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: "you@example.com"
+      - key: EMAIL_HOST_PASSWORD
+        value: "REPLACE_ME"
+      - key: DEFAULT_FROM_EMAIL
+        value: "you@example.com"
+
+databases:
+  - name: mindsprint-db
+    plan: starter
