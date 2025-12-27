@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url
+
+# Deployment Test - Version 1.0
 
 # ----------------------------
 # BASE DIRECTORY
@@ -22,7 +25,12 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".onrender.com", 
+]
+
 
 # ----------------------------
 # APPLICATIONS
@@ -85,17 +93,40 @@ WSGI_APPLICATION = 'mindsprint.wsgi.application'
 # ----------------------------
 # DATABASE
 # ----------------------------
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-    }
-}
+import dj_database_url
+import os
 
+# ... rest of settings ...
+# --- Find your DATABASE section and replace it with this ---
+
+# 1. Define a fallback (local)
+# ----------------------------
+# DATABASE CONFIGURATION
+# ----------------------------
+# Check if we are running on Render
+ON_RENDER = 'RENDER' in os.environ
+
+if ON_RENDER:
+    # Use the Render Internal Database URL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # Local Development (your laptop)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "mindsprint_db",
+            "USER": "postgres",
+            "PASSWORD": "0000",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
 # ----------------------------
 # STATIC & MEDIA FILES (Fixed & Consolidated)
 # ----------------------------
@@ -155,8 +186,13 @@ LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/login/"
 LOGIN_URL = "/login/"
 
-# ----------------------------
-# FINAL VERIFICATION PRINT
-# ----------------------------
-print(f"--- SETTINGS LOADED SUCCESSFULLY ---")
-print(f"STATIC_ROOT is set to: {STATIC_ROOT}")
+
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
+
+# This print will show up in your Render Logs to help us debug
+if os.getenv('DATABASE_URL'):
+    print("✅ DATABASE_URL found in environment")
+else:
+    print("❌ DATABASE_URL NOT FOUND - Check Render Dashboard")
+
