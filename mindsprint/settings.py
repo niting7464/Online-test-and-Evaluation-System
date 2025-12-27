@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     ".onrender.com", 
+    "https://online-test-and-evaluation-system-1.onrender.com/"
 ]
 
 
@@ -195,4 +196,23 @@ if os.getenv('DATABASE_URL'):
     print("✅ DATABASE_URL found in environment")
 else:
     print("❌ DATABASE_URL NOT FOUND - Check Render Dashboard")
+
+
+# CREATE A DEFAULT SUPERUSER IF ENV VARIABLES ARE SET
+if os.getenv("DJANGO_SUPERUSER_USERNAME"):
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        if not User.objects.filter(
+            username=os.getenv("DJANGO_SUPERUSER_USERNAME")
+        ).exists():
+            User.objects.create_superuser(
+                username=os.getenv("DJANGO_SUPERUSER_USERNAME"),
+                email=os.getenv("DJANGO_SUPERUSER_EMAIL"),
+                password=os.getenv("DJANGO_SUPERUSER_PASSWORD"),
+            )
+    except Exception as e:
+        print("Superuser creation skipped:", e)
+
 

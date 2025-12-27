@@ -50,3 +50,9 @@ Thumbs.db
 
 # Mac system files
 ._*
+
+
+*.pyc
+staticfiles/
+
+
