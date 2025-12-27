@@ -1,0 +1,935 @@
+/* ============================================
+   Professional Corporate Design System
+   ============================================ */
+
+:root {
+    /* Professional Color Palette */
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --primary-light: #3b82f6;
+    --secondary: #64748b;
+    --accent: #0ea5e9;
+    
+    /* Status Colors */
+    --success: #059669;
+    --success-light: #d1fae5;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --info: #0284c7;
+    --info-light: #e0f2fe;
+    
+    /* Neutral Colors - Professional Grays */
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    
+    /* Typography */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-size-base: 0.9375rem;
+    --font-size-sm: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
+    --font-size-2xl: 1.25rem;
+    --font-size-3xl: 1.5rem;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    
+    /* Shadows - Subtle and Professional */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Transitions */
+    --transition-base: 200ms ease-in-out;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.6;
+    font-size: var(--font-size-base);
+}
+
+/* ============================================
+   Professional Navbar
+   ============================================ */
+
+.navbar {
+    background: white !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--gray-900) !important;
+    letter-spacing: -0.025em;
+}
+
+.navbar-toggler {
+    border: 1px solid var(--gray-300);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+}
+
+/* ============================================
+   Professional Cards
+   ============================================ */
+
+.card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    background: white;
+    transition: box-shadow var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    font-size: var(--font-size-lg);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ============================================
+   Professional Buttons
+   ============================================ */
+
+.btn {
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all var(--transition-base);
+    border: 1px solid transparent;
+    font-size: var(--font-size-sm);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.btn-success:hover {
+    background: #047857;
+    border-color: #047857;
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+    border-color: var(--gray-400);
+}
+
+/* ============================================
+   Professional Forms
+   ============================================ */
+
+.form-control {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-300);
+    padding: 0.5rem 0.75rem;
+    transition: all var(--transition-base);
+    font-size: var(--font-size-base);
+    background: white;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 0.375rem;
+    font-size: var(--font-size-sm);
+}
+
+.form-check-input {
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+    border: 1.5px solid var(--gray-400);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-check-label {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    color: var(--gray-700);
+}
+
+/* ============================================
+   Dashboard Components
+   ============================================ */
+
+.stat-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--primary);
+    transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.test-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-base);
+}
+
+.test-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--gray-300);
+}
+
+.test-card-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.75rem;
+}
+
+.test-card-meta {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.test-card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+/* ============================================
+   Test Attempt Page
+   ============================================ */
+
+.timer-display {
+    background: white;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-900);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--primary);
+}
+
+.timer-display h5 {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.timer-display .time-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+.category-tile {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.category-tile:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.category-tile.active {
+    border-color: var(--primary);
+    border-width: 2px;
+    background: var(--gray-50);
+}
+
+.question-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-base);
+}
+
+.question-card.attempted {
+    border-color: var(--success);
+    border-left: 4px solid var(--success);
+    background: var(--gray-50);
+}
+
+.question-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.progress-bar-container {
+    background: var(--gray-200);
+    border-radius: 9999px;
+    height: 6px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.progress-bar {
+    background: var(--primary);
+    height: 100%;
+    border-radius: 9999px;
+    transition: width var(--transition-base);
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 2rem 0;
+    list-style: none;
+    padding: 0;
+}
+
+.page-item {
+    margin: 0;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+    background: white;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    display: block;
+    cursor: pointer;
+}
+
+.page-link:hover {
+    background: var(--gray-50);
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.page-link:disabled,
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ============================================
+   Result Page
+   ============================================ */
+
+.result-header {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.result-score {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 1rem 0;
+}
+
+.result-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    margin: 0.5rem 0;
+}
+
+.result-badge.passed {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.result-badge.failed {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.category-result-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.question-result-item {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    border: 1px solid var(--gray-200);
+    background: white;
+}
+
+.question-result-item.correct {
+    background: var(--success-light);
+    border-color: var(--success);
+    border-left: 4px solid var(--success);
+}
+
+.question-result-item.incorrect {
+    background: var(--danger-light);
+    border-color: var(--danger);
+    border-left: 4px solid var(--danger);
+}
+
+/* ============================================
+   Auth Pages
+   ============================================ */
+
+.auth-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.auth-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 2.5rem;
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid var(--gray-200);
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 40px;
+}
+
+.password-toggle,
+.password-toggle-confirm {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--gray-600);
+    z-index: 10;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.password-toggle:hover,
+.password-toggle-confirm:hover {
+    color: var(--primary) !important;
+    text-decoration: none;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gray-200);
+}
+
+/* Ensure dropdowns appear above other elements and are clickable */
+.navbar, .navbar .dropdown {
+    position: relative;
+    z-index: 1100;
+}
+.dropdown-menu {
+    z-index: 2050 !important;
+    pointer-events: auto !important;
+}
+.dropdown-item {
+    pointer-events: auto !important;
+}
+
+/* Profile card sizing inside dropdown */
+.profile-card {
+    min-width: 320px;
+    max-width: 420px;
+}
+.profile-card .profile-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.05rem;
+}
+
+/* Profile avatar in dropdown header */
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    box-shadow: 0 6px 18px rgba(11,22,40,0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+/* Smaller avatar when used in navbar toggle button */
+.navbar .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+}
+
+/* Compact icon button style for navbar */
+.btn-icon {
+    padding: 6px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+/* Nudge the profile dropdown slightly left to align visually */
+.navbar .dropdown {
+    margin-left: -6px;
+}
+
+.dropdown-menu .fw-semibold {
+    font-weight: 600;
+}
+
+.dropdown-menu {
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 6px 20px rgba(11,22,40,0.12);
+    border: 1px solid rgba(16,24,40,0.06);
+}
+
+/* dropdown item polish */
+.dropdown-item {
+    padding: 10px 14px;
+    transition: background .12s ease, color .12s ease;
+    color: #0f1724;
+}
+.dropdown-item i.text-muted { color: #6b7280; }
+.dropdown-item:hover { background: #f8fafc; color: #0b1220; }
+.dropdown-divider { margin: 6px 0; }
+.list-group-flush .dropdown-item { border-radius: 0; }
+
+/* Slight animation when dropdown appears */
+.dropdown-menu.show { transform-origin: top right; animation: dropdownFade .12s ease; }
+@keyframes dropdownFade { from { opacity: 0; transform: translateY(-6px) scale(.995);} to { opacity:1; transform: translateY(0) scale(1);} }
+
+/* Smaller profile button so icon is compact and aligned */
+/* (restored default button sizing; custom compact rule removed) */
+
+/* Keep dropdown within viewport and responsive */
+.dropdown-menu.dropdown-menu-end {
+        right: 8px !important;
+        left: auto !important;
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+}
+
+/* On very small screens, make dropdown full width under navbar */
+@media (max-width: 480px) {
+    .navbar .dropdown-menu.dropdown-menu-end {
+        position: absolute;
+        left: 8px !important;
+        right: 8px !important;
+        width: auto !important;
+        max-width: calc(100vw - 16px);
+    }
+    .dropdown-menu .px-3 {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}
+
+.auth-divider span {
+    background: white;
+    padding: 0 1rem;
+    position: relative;
+    color: var(--gray-500);
+    font-size: var(--font-size-sm);
+}
+
+/* ============================================
+   Badges & Labels
+   ============================================ */
+
+.badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    border: 1px solid transparent;
+}
+
+
+/* Brand styling: make Mindsprint more distinctive but professional */
+.navbar-brand {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--primary-dark) !important;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.navbar-brand:hover { text-decoration: none; color: var(--primary) !important; }
+
+@media (max-width: 576px) {
+    .navbar-brand { font-size: 1.25rem; }
+}
+.badge-success {
+    background: var(--success-light);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.badge-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.badge-info {
+    background: var(--info-light);
+    color: var(--info);
+    border-color: var(--info);
+}
+
+.badge-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+/* ============================================
+   Alerts
+   ============================================ */
+
+.alert {
+    border-radius: var(--radius-md);
+    border: 1px solid;
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.alert-success {
+    background: var(--success-light);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.alert-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.alert-info {
+    background: var(--info-light);
+    color: var(--info);
+    border-color: var(--info);
+}
+
+/* ============================================
+   List Groups
+   ============================================ */
+
+.list-group-item {
+    border: 1px solid var(--gray-200);
+    padding: 1rem 1.25rem;
+    transition: all var(--transition-base);
+    background: white;
+}
+
+.list-group-item:hover {
+    background: var(--gray-50);
+}
+
+.list-group-item:first-child {
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+}
+
+.list-group-item:last-child {
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+
+.text-gradient {
+    color: var(--gray-900);
+    font-weight: 700;
+}
+
+.shadow-custom {
+    box-shadow: var(--shadow-lg);
+}
+
+.rounded-custom {
+    border-radius: var(--radius-lg);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .timer-display .time-value {
+        font-size: 1.5rem;
+    }
+    
+    .result-score {
+        font-size: 2rem;
+    }
+    
+    .test-card-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* ============================================
+   Loading States
+   ============================================ */
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   Question Options Styling
+   ============================================ */
+
+.question-card .form-check {
+    padding: 0.75rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.5rem;
+    transition: all var(--transition-base);
+    background: white;
+}
+
+.question-card .form-check:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-300);
+}
+
+.question-card .form-check-input:checked ~ .form-check-label {
+    color: var(--primary);
+    font-weight: 600;
+}
