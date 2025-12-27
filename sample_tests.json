@@ -1,0 +1,62 @@
+{
+  "categories": [
+    {"name": "Aptitude"},
+    {"name": "Python Basics"}
+  ],
+  "questions": [
+    {
+      "question_category": "Aptitude",
+      "question_text": "2 + 2 = ?",
+      "option_a": "3",
+      "option_b": "4",
+      "option_c": "5",
+      "option_d": "6",
+      "correct_option": "B",
+      "marks": 1,
+      "answer_explanation": "Basic addition"
+    },
+    {
+      "question_category": "Python Basics",
+      "question_text": "Which keyword is used to define a function in Python?",
+      "option_a": "func",
+      "option_b": "def",
+      "option_c": "function",
+      "option_d": "lambda",
+      "correct_option": "B",
+      "marks": 1,
+      "answer_explanation": "Functions in Python are defined using 'def'."
+    }
+  ],
+  "tests": [
+    {
+      "name": "Sample Aptitude Test",
+      "description": "A simple test with aptitude questions",
+      "duration": 15,
+      "max_questions": 1,
+      "total_marks": 1,
+      "passing_marks": 1,
+      "status": "PUBLISHED"
+    },
+    {
+      "name": "Sample Python Test",
+      "description": "Basic Python knowledge test",
+      "duration": 20,
+      "max_questions": 1,
+      "total_marks": 1,
+      "passing_marks": 1,
+      "status": "PUBLISHED"
+    }
+  ],
+  "test_category_configs": [
+    {
+      "test": "Sample Aptitude Test",
+      "category": "Aptitude",
+      "number_of_questions": 1
+    },
+    {
+      "test": "Sample Python Test",
+      "category": "Python Basics",
+      "number_of_questions": 1
+    }
+  ]
+}
