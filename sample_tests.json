@@ -325,7 +325,7 @@
       "duration": 60,
       "max_questions": 50,
       "total_marks": 50,
-      "passing_marks": 30,
+      "passing_marks": 20,
       "status": "PUBLISHED"
     },
     {
@@ -333,8 +333,8 @@
       "description": "Focuses on algorithmic thinking, data structures, and object-oriented design principles.",
       "duration": 45,
       "max_questions": 50,
-      "total_marks": 75,
-      "passing_marks": 45,
+      "total_marks": 50,
+      "passing_marks": 20,
       "status": "PUBLISHED"
     },
     {
@@ -342,8 +342,8 @@
       "description": "Covers AWS infrastructure services and advanced Database Management Systems.",
       "duration": 40,
       "max_questions": 50,
-      "total_marks": 60,
-      "passing_marks": 35,
+      "total_marks": 50,
+      "passing_marks": 20,
       "status": "PUBLISHED"
     },
     {
@@ -351,8 +351,8 @@
       "description": "An intensive deep-dive into Python internals, memory management, and advanced OOPs.",
       "duration": 30,
       "max_questions": 50,
-      "total_marks": 60,
-      "passing_marks": 40,
+      "total_marks": 50,
+      "passing_marks": 20,
       "status": "PUBLISHED"
     },
     {
@@ -361,7 +361,7 @@
       "duration": 60,
       "max_questions": 50,
       "total_marks": 50,
-      "passing_marks": 25,
+      "passing_marks": 20,
       "status": "PUBLISHED"
     }
   ],
