@@ -88,26 +88,26 @@ def login_view(request):
 
 logger = logging.getLogger(__name__)
 
-def send_reset_email(to_email, reset_link):
-    """Send the password reset email using custom HTML template."""
+def send_reset_email(user, reset_link):
+    """Send password reset email."""
     try:
         html_content = render_to_string(
-            "emails/password_reset.html",  # Your HTML template
-            {"reset_link": reset_link}
+            "emails/password_reset.html",
+            {"user": user, "reset_link": reset_link}
         )
-        text_content = strip_tags(html_content)  # fallback for plain text
+        text_content = strip_tags(html_content)
 
         email_message = EmailMultiAlternatives(
             subject="Reset Your Password",
             body=text_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email]
+            to=[user.email]
         )
         email_message.attach_alternative(html_content, "text/html")
         email_message.send()
-
     except Exception as e:
         logger.error(f"Failed to send password reset email: {e}")
+
 
 @ensure_csrf_cookie
 def forgot_password_view(request):
@@ -121,21 +121,9 @@ def forgot_password_view(request):
 
             # Generate reset link only if user exists
             if user:
-                try:
-                    token = PasswordResetTokenGenerator().make_token(user)
-                    uid = urlsafe_base64_encode(force_bytes(user.pk))
-                    reset_path = reverse('reset-password_page', args=[uid, token])
-                    
-                    domain = getattr(settings, 'PASSWORD_RESET_DOMAIN', None)
-                    if domain:
-                        reset_link = domain.rstrip('/') + reset_path
-                    else:
-                        reset_link = request.build_absolute_uri(reset_path)
+                reset_link = domain.rstrip('/') + reset_path
+                send_reset_email(user, reset_link)
 
-                    send_reset_email(email, reset_link)
-
-                except Exception as e:
-                    logger.error(f"Error preparing password reset email: {e}")
 
             messages.success(
                 request,
