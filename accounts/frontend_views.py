@@ -89,29 +89,36 @@ def login_view(request):
 logger = logging.getLogger(__name__)
 
 def send_reset_email(user, reset_link):
-    """Send password reset email."""
-    try:
-        html_content = render_to_string(
-            "emails/password_reset.html",
-            {"user": user, "reset_link": reset_link}
-        )
-        text_content = strip_tags(html_content)
+    """
+    Send the password reset email using Brevo API.
+    """
+    api_key = settings.BREVO_API_KEY  # Add this in your Render environment
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "Content-Type": "application/json"
+    }
 
-        email_message = EmailMultiAlternatives(
-            subject="Reset Your Password",
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email]
-        )
-        email_message.attach_alternative(html_content, "text/html")
-        email_message.send()
-    except Exception as e:
-        logger.error(f"Failed to send password reset email: {e}")
+    # Render your HTML email template
+    html_content = render_to_string("emails/password_reset.html", {"user": user, "reset_link": reset_link})
+    
+    # Send POST request to Brevo API
+    payload = {
+        "sender": {"name": "Online Test System", "email": settings.DEFAULT_FROM_EMAIL},
+        "to": [{"email": user.email, "name": user.get_full_name() or user.username}],
+        "subject": "Reset Your Password",
+        "htmlContent": html_content
+    }
+
+    response = requests.post(url, json=payload, headers=headers, timeout=10)
+    if response.status_code != 201:
+        logger.error(f"Brevo email failed: {response.status_code} {response.text}")
+        raise Exception(f"Failed to send email: {response.status_code} {response.text}")
 
 
 @ensure_csrf_cookie
 def forgot_password_view(request):
-    """Handle forgot password form and send reset link."""
     if request.method == "POST":
         form = ForgotPasswordForm(request.POST)
         if form.is_valid():
@@ -119,21 +126,28 @@ def forgot_password_view(request):
             User = get_user_model()
             user = User.objects.filter(email=email).first()
 
-            # Generate reset link only if user exists
             if user:
-                reset_link = domain.rstrip('/') + reset_path
-                send_reset_email(user, reset_link)
+                try:
+                    token = PasswordResetTokenGenerator().make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    reset_path = reverse('reset-password_page', args=[uid, token])
 
+                    domain = getattr(settings, 'PASSWORD_RESET_DOMAIN', None)
+                    if domain:
+                        reset_link = domain.rstrip('/') + reset_path
+                    else:
+                        reset_link = request.build_absolute_uri(reset_path)
 
-            messages.success(
-                request,
-                "If the email exists, a reset link has been sent to your inbox."
-            )
+                    send_reset_email(user, reset_link)
+
+                except Exception as e:
+                    logger.error(f"Failed to send password reset email: {e}")
+
+            messages.success(request, "If the email exists, a reset link has been sent")
             return redirect("forgot-password_page")
         else:
             return render(request, "auth/forgot_password.html", {"form": form})
 
-    # GET request
     return render(request, "auth/forgot_password.html")
 
 
