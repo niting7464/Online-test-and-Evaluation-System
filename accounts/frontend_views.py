@@ -92,10 +92,7 @@ def login_view(request):
 logger = logging.getLogger(__name__)
 
 def send_reset_email(user, reset_link):
-    """
-    Send the password reset email using Brevo API.
-    """
-    api_key = settings.BREVO_API_KEY  # Add this in your Render environment
+    api_key = settings.BREVO_API_KEY
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "accept": "application/json",
@@ -103,10 +100,16 @@ def send_reset_email(user, reset_link):
         "Content-Type": "application/json"
     }
 
-    # Render your HTML email template
-    html_content = render_to_string("emails/password_reset.html", {"user": user, "reset_link": reset_link})
-    
-    # Send POST request to Brevo API
+    html_content = render_to_string(
+        "emails/password_reset.html",
+        {
+            "user": user,
+            "reset_link": reset_link,
+            "site_name": "Online Test System",
+            "support_email": "niting7464@gmail.com"
+        }
+    )
+
     payload = {
         "sender": {"name": "Online Test System", "email": settings.DEFAULT_FROM_EMAIL},
         "to": [{"email": user.email, "name": user.get_full_name() or user.username}],
@@ -118,6 +121,7 @@ def send_reset_email(user, reset_link):
     if response.status_code != 201:
         logger.error(f"Brevo email failed: {response.status_code} {response.text}")
         raise Exception(f"Failed to send email: {response.status_code} {response.text}")
+
 
 
 @ensure_csrf_cookie
