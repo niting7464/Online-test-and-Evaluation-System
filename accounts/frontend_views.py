@@ -19,6 +19,9 @@ from django.utils.html import strip_tags
 from django.core.mail import EmailMultiAlternatives
 import logging
 from threading import Thread
+import requests
+import json
+import traceback
 
 # NOTE: avoid making HTTP requests to the same Django process (deadlock).
 # Frontend views should authenticate internally instead of calling the API.
