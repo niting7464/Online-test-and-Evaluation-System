@@ -17,6 +17,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import EmailMultiAlternatives
+import logging
 
 # NOTE: avoid making HTTP requests to the same Django process (deadlock).
 # Frontend views should authenticate internally instead of calling the API.
@@ -26,7 +27,7 @@ from django.http import JsonResponse
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
-    
+
 
 @ensure_csrf_cookie
 def register_view(request):
@@ -83,6 +84,18 @@ def login_view(request):
     return render(request, "auth/login.html")
 
 
+# Helper function to send email in background
+logger = logging.getLogger(__name__)
+
+def send_email_async(email_message):
+    def send():
+        try:
+            email_message.send()
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {e}")
+    Thread(target=send).start()
+
+
 @ensure_csrf_cookie
 def forgot_password_view(request):
     if request.method == "POST":
@@ -92,31 +105,38 @@ def forgot_password_view(request):
             User = get_user_model()
             user = User.objects.filter(email=email).first()
 
-            # Prevent enumeration
             if user:
-                token = PasswordResetTokenGenerator().make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                from django.urls import reverse
-                reset_path = reverse('reset-password_page', args=[uid, token])
-                # Use configured domain when available (useful for emails sent to phones)
-                domain = getattr(__import__('django.conf').conf.settings, 'PASSWORD_RESET_DOMAIN', None)
-                if domain:
-                    reset_link = domain.rstrip('/') + reset_path
-                else:
-                    reset_link = request.build_absolute_uri(reset_path)
-                html_content = render_to_string(
-                    "emails/password_reset.html",
-                    {"user": user, "reset_link": reset_link}
-                )
-                text_content = strip_tags(html_content)
-                email_message = EmailMultiAlternatives(
-                    subject="Reset Your Password",
-                    body=text_content,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[email],
-                )
-                email_message.attach_alternative(html_content, "text/html")
-                email_message.send()
+                try:
+                    token = PasswordResetTokenGenerator().make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+                    from django.urls import reverse
+                    reset_path = reverse('reset-password_page', args=[uid, token])
+
+                    domain = getattr(settings, 'PASSWORD_RESET_DOMAIN', None)
+                    if domain:
+                        reset_link = domain.rstrip('/') + reset_path
+                    else:
+                        reset_link = request.build_absolute_uri(reset_path)
+
+                    html_content = render_to_string(
+                        "emails/password_reset.html",
+                        {"user": user, "reset_link": reset_link}
+                    )
+                    text_content = strip_tags(html_content)
+
+                    email_message = EmailMultiAlternatives(
+                        subject="Reset Your Password",
+                        body=text_content,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[email],
+                    )
+                    email_message.attach_alternative(html_content, "text/html")
+                    send_email_async(email_message)
+
+                except Exception as e:
+                    # Log any unexpected errors but don’t crash the view
+                    logger.error(f"Error preparing password reset email: {e}")
 
             messages.success(request, "If the email exists, a reset link has been sent")
             return redirect("forgot-password_page")
