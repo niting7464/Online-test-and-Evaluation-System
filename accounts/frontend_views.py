@@ -87,32 +87,51 @@ def login_view(request):
 
 
 
-@ensure_csrf_cookie
+logger = logging.getLogger(__name__)
+
 def forgot_password_view(request):
     if request.method == "POST":
         form = ForgotPasswordForm(request.POST)
+
         if form.is_valid():
-            email = form.cleaned_data['email']
+            email = form.cleaned_data["email"]
             User = get_user_model()
             user = User.objects.filter(email=email).first()
 
             if user:
-                token = PasswordResetTokenGenerator().make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                reset_path = reverse('reset-password_page', args=[uid, token])
+                try:
+                    token = PasswordResetTokenGenerator().make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-                domain = settings.PASSWORD_RESET_DOMAIN.rstrip('/')
-                reset_link = domain + reset_path
+                    reset_path = reverse(
+                        "reset-password_page",
+                        args=[uid, token]
+                    )
 
-                send_reset_email(email, reset_link)
+                    domain = getattr(settings, "PASSWORD_RESET_DOMAIN", None)
 
+                    if domain:
+                        reset_link = domain.rstrip("/") + reset_path
+                    else:
+                        reset_link = request.build_absolute_uri(reset_path)
+
+                    send_reset_email(email, reset_link)
+
+                except Exception as e:
+                    # Never crash prod for email issues
+                    logger.error(f"Password reset email failed: {e}")
+
+            # Enumeration-safe response
             messages.success(
                 request,
-                "If the email exists, a reset link has been sent"
+                "If the email exists, a reset link has been sent."
             )
             return redirect("forgot-password_page")
 
-    return render(request, "auth/forgot_password.html")
+    else:
+        form = ForgotPasswordForm()
+
+    return render(request, "auth/forgot_password.html", {"form": form})
 
 
 @ensure_csrf_cookie
