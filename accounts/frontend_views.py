@@ -86,11 +86,6 @@ def login_view(request):
     return render(request, "auth/login.html")
 
 
-# Helper function to send email in background
-logger = logging.getLogger(__name__)
-logger.info(f"Password reset email queued for {email}")
-
-
 
 @ensure_csrf_cookie
 def forgot_password_view(request):
