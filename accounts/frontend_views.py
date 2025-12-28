@@ -18,6 +18,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import EmailMultiAlternatives
 import logging
+from threading import Thread
 
 # NOTE: avoid making HTTP requests to the same Django process (deadlock).
 # Frontend views should authenticate internally instead of calling the API.
