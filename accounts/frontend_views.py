@@ -21,6 +21,12 @@ from django.core.mail import EmailMultiAlternatives
 # NOTE: avoid making HTTP requests to the same Django process (deadlock).
 # Frontend views should authenticate internally instead of calling the API.
 
+from django.http import JsonResponse
+
+
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+    
 
 @ensure_csrf_cookie
 def register_view(request):

@@ -26,7 +26,6 @@ from .serializers import (
 
 
 
-
 class UserSignupAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
