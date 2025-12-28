@@ -18,9 +18,7 @@ class Command(BaseCommand):
         # 1️⃣ Categories
         categories_map = {}
         for cat_data in data.get('categories', []):
-            cat, created = QuestionCategory.objects.get_or_create(
-                name=cat_data['name']
-            )
+            cat, created = QuestionCategory.objects.get_or_create(name=cat_data['name'])
             categories_map[cat.name] = cat
             if created:
                 self.stdout.write(f"Created category: {cat.name}")
@@ -33,7 +31,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Skipping question, unknown category: {cat_name}"))
                 continue
 
-            question, created = Question.objects.get_or_create(
+            # Update existing question or create new
+            question, _ = Question.objects.update_or_create(
                 question_text=q_data['question_text'],
                 question_category=category,
                 defaults={
@@ -46,13 +45,12 @@ class Command(BaseCommand):
                     'answer_explanation': q_data.get('answer_explanation', '')
                 }
             )
-            if created:
-                self.stdout.write(f"Created question: {question.question_text[:50]}")
+            self.stdout.write(f"Updated/Created question: {question.question_text[:50]}")
 
         # 3️⃣ Tests
         tests_map = {}
         for t_data in data.get('tests', []):
-            test, created = Test.objects.get_or_create(
+            test, _ = Test.objects.update_or_create(
                 name=t_data['name'],
                 defaults={
                     'description': t_data.get('description', ''),
@@ -64,8 +62,7 @@ class Command(BaseCommand):
                 }
             )
             tests_map[test.name] = test
-            if created:
-                self.stdout.write(f"Created test: {test.name}")
+            self.stdout.write(f"Updated/Created test: {test.name}")
 
         # 4️⃣ TestCategoryConfig
         for cfg in data.get('test_category_configs', []):
@@ -75,12 +72,11 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Skipping config: {cfg}"))
                 continue
 
-            config, created = TestCategoryConfig.objects.get_or_create(
+            config, _ = TestCategoryConfig.objects.update_or_create(
                 test=test,
                 category=category,
                 defaults={'number_of_questions': cfg['number_of_questions']}
             )
-            if created:
-                self.stdout.write(f"Added category config: {test.name} - {category.name} ({config.number_of_questions})")
+            self.stdout.write(f"Updated/Created config: {test.name} - {category.name} ({config.number_of_questions})")
 
-        self.stdout.write(self.style.SUCCESS("Import completed!"))
+        self.stdout.write(self.style.SUCCESS("Import completed successfully!"))
