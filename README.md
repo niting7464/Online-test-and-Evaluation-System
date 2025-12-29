@@ -1,5 +1,4 @@
 # Mindsprint — Online Test and Evaluation System
-# Mindsprint — Online Test and Evaluation System
 
 This is a Django-based online test and evaluation system. The repository contains the Django project `mindsprint`, an `accounts` app, `tests` app, templates and static assets.
 
